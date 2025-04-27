@@ -1,0 +1,31 @@
+## Interface: 110105
+## Version: 2.1.1
+## Title: Instance Loadouts
+## Notes: Reminds you to change specialization, talents, gear set and addons
+## Author: Bisse
+## X-Patch: The War Within 11.1.5
+## X-Curse-Project-ID: 1235057
+## X-Wago-ID: 4N2m0QGL
+## SavedVariables: InstanceLoadoutsDB
+## OptionalDeps: ACP, BetterAddonList, SimpleAddonManager, TalentLoadoutManager
+## Category-enUS: Dungeons & Raids
+## Category-deDE: Dungeons & Schlachtzüge
+## Category-esES: Mazmorras y bandas
+## Category-esMX: Calabozos y bandas
+## Category-frFR: Donjons et raids
+## Category-itIT: Spedizioni e incursioni
+## Category-koKR: 던전 및 공격대
+## Category-ptBR: Masmorras e Raides
+## Category-ruRU: Подземелья и рейды
+## Category-zhCN: 地下城和团队副本
+## Category-zhTW: 地城與團隊
+
+Libs/embeds.xml
+
+core/Constants.lua
+core/customGroups.lua
+core/Managers.lua
+core/Config.lua
+core/Reminder.lua
+core/ImportExport.lua
+core/InstanceLoadouts.lua
