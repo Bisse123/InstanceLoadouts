@@ -513,3 +513,11 @@ end
 function addon.manager:getTalentExportString(loadoutID)
     return TalentLoadoutManagerAPI.GlobalAPI:GetExportString(loadoutID)
 end
+
+function addon:getSupportedAddonManagers()
+    return addonManagers
+end
+
+function addon:getSupportedTalentManagers()
+    return talentManagers
+end

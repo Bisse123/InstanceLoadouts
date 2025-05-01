@@ -145,6 +145,29 @@ end
 -- Creates blizzard options tab
 local function createBlizzOptions()
     local orderCount = CreateCounter(1)
+    local nextSpace = 1
+    local function newSpace()
+        nextSpace = nextSpace + 1
+        return {
+            order = orderCount(),
+            name = " ",
+            type = "description",
+            fontSize = "large",
+        }
+    end
+    local function showManagers(managers)
+        local args = {}
+        for _, name in pairs(managers) do
+            local arg = {
+                order = orderCount(),
+                name = "- " .. name,
+                type = "description",
+                fontSize = "medium",
+            }
+            args[name] = arg
+        end
+        return args
+    end
     local aboutTable = {
         name = addonName,
         type = "group",
@@ -155,13 +178,29 @@ local function createBlizzOptions()
                 order = orderCount(),
                 name = "Author: " .. C_AddOns.GetAddOnMetadata(addonName, "Author"),
                 type = "description",
+                width = 2.5,
+                fontSize = "large",
+            },
+            slashCommandHeader = {
+                order = orderCount(),
+                name = "Slash commands",
+                type = "description",
+                width = 1,
                 fontSize = "large",
             },
             version = {
                 order = orderCount(),
                 name = "Version: " .. C_AddOns.GetAddOnMetadata(addonName, "Version"),
                 type = "description",
+                width = 2.5,
                 fontSize = "large",
+            },
+            slashCommand = {
+                order = orderCount(),
+                name = "/instanceloadouts\n/il",
+                type = "description",
+                width = 1,
+                fontSize = "medium",
             },
             patch = {
                 order = orderCount(),
@@ -179,6 +218,7 @@ local function createBlizzOptions()
                 end,
                 cmdHidden = true,
             },
+            ["space" .. nextSpace] = newSpace(),
             externalsAddonsHeader = {
                 order = orderCount(),
                 name = "Supported Addon Managers",
@@ -187,10 +227,12 @@ local function createBlizzOptions()
             },
             externalsAddonsText = {
                 order = orderCount(),
-                name = "- Addon Control Panel",
-                type = "description",
-                fontSize = "medium",
+                name = "",
+                type = "group",
+                inline = true,
+                args = showManagers(addon:getSupportedAddonManagers())
             },
+            ["space" .. nextSpace] = newSpace(),
             externalsTalentHeader = {
                 order = orderCount(),
                 name = "Supported Talent Managers",
@@ -199,16 +241,12 @@ local function createBlizzOptions()
             },
             externalsTalentText = {
                 order = orderCount(),
-                name = "- Talent Loadout Manager",
-                type = "description",
-                fontSize = "medium",
+                name = "",
+                type = "group",
+                inline = true,
+                args = showManagers(addon:getSupportedTalentManagers())
             },
-            Space1 = {
-                order = orderCount(),
-                name = " ",
-                type = "description",
-                fontSize = "large",
-            },
+            ["space" .. nextSpace] = newSpace(),
             changelogHeader = {
                 order = orderCount(),
                 name = "Changelog",
@@ -243,12 +281,7 @@ local function createBlizzOptions()
                     return addon.db.global.autoShowChangelog
                 end,
             },
-            Space2 = {
-                order = orderCount(),
-                name = " ",
-                type = "description",
-                fontSize = "large",
-            },
+            ["space" .. nextSpace] = newSpace(),
             customGroupsHeader = {
                 order = orderCount(),
                 name = "Manage Custom Groups",
@@ -270,12 +303,7 @@ local function createBlizzOptions()
                 func = "toggleCustomGroups",
                 guiHidden = true,
             },
-            Space3 = {
-                order = orderCount(),
-                name = " ",
-                type = "description",
-                fontSize = "large",
-            },
+            ["space" .. nextSpace] = newSpace(),
             OptionsHeader = {
                 order = orderCount(),
                 name = "Configure Loadouts",
@@ -297,12 +325,7 @@ local function createBlizzOptions()
                 func = "toggleConfig",
                 guiHidden = true,
             },
-            Space4 = {
-                order = orderCount(),
-                name = " ",
-                type = "description",
-                fontSize = "large",
-            },
+            ["space" .. nextSpace] = newSpace(),
             ImportExport = {
                 order = orderCount(),
                 name = "Import/Export loadouts",
@@ -323,24 +346,7 @@ local function createBlizzOptions()
                 desc = "Export Loadout",
                 func = "ShowExportFrame",
             },
-            Space5 = {
-                order = orderCount(),
-                name = " ",
-                type = "description",
-                fontSize = "large",
-            },
-            slashCommandHeader = {
-                order = orderCount(),
-                name = "Get a full list of slash commands",
-                type = "description",
-                fontSize = "large",
-            },
-            slashCommand = {
-                order = orderCount(),
-                name = "/instanceloadouts config\n/il config",
-                type = "description",
-                fontSize = "medium",
-            },
+            ["space" .. nextSpace] = newSpace(),
         }
     }
     return aboutTable
