@@ -43,11 +43,11 @@ end
 local function setACPHook()
     if not addon:IsHooked(ACP, "RenameSet") then
         addon:Hook(ACP, "RenameSet", function()
-            if addon.frame and addon.frame:IsShown() then
+            if addon.frame and addon.frameType == "Config" then
                 C_Timer.After(0, function()
                     addon:openConfig()
                 end)
-            elseif addon.loadoutFrame and addon.loadoutFrame:IsShown() then
+            elseif addon.frame and addon.frameType == "Reminder" then
                 C_Timer.After(0, function()
                     addon:checkIfIsTrackedInstance()
                 end)
@@ -269,7 +269,7 @@ local function setTLMHook()
                 end
             end
         end
-        if addon.frame and addon.frame:IsShown() then
+        if addon.frame and addon.frameType == "Config" then
             addon:openConfig()
         end
     end)
@@ -384,13 +384,13 @@ function addon:populateExternalInfo()
                 end
             end
         end
-        if self.frame and self.frame:IsShown() then
+        if self.frame and self.frameType == "Config" then
             self:openConfig()
         end
     end)
     self:RegisterEvent("TRAIT_CONFIG_CREATED", function(event, configInfo)
         self:checkTalentManager()
-        if self.frame and self.frame:IsShown() then
+        if self.frame and self.frameType == "Config" then
             addon:openConfig()
         end
     end)
@@ -404,7 +404,7 @@ function addon:populateExternalInfo()
             end
         end
         self:checkTalentManager()
-        if self.frame and self.frame:IsShown() then
+        if self.frame and self.frameType == "Config" then
             addon:openConfig()
         end
     end)

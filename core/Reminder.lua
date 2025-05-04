@@ -372,7 +372,7 @@ function addon:createChangeOptionsButton(frame, instanceType, instance)
     button:SetRelativeWidth(0.5)
     button:SetHeight(35)
     button:SetCallback("OnClick", function(widget, callback, mouseButton)
-        AceGUI:Release(addon.loadoutFrame)
+        AceGUI:Release(addon.frame)
         addon.ConfigView.instanceType = instanceType
         addon.ConfigView.instance = instance
         addon.ConfigView.encounter = encounter
@@ -385,27 +385,24 @@ end
 
 -- Main function to show the reminder window
 function addon:showLoadoutForInstance(instanceType, instance)
-    if self.customGroupFrame and self.customGroupFrame:IsShown() then
-        AceGUI:Release(self.customGroupFrame)
+    local frame = self.frame
+    if self.frame and self.frameType == "Reminder" then
+        self.frame:ReleaseChildren()
+    else
+        if self.frame then
+            AceGUI:Release(self.frame)
+        end
+        self.frameType = "Reminder"
+        frame = AceGUI:Create("Frame")
+        frame:SetTitle(addonName)
+        frame:SetLayout("Flow")
+        frame:SetWidth(600)
+        frame:SetHeight(425)
+        frame:SetCallback("OnClose", function(widget)
+            AceGUI:Release(widget)
+            self.frame = nil
+        end)
     end
-    if self.frame and self.frame:IsShown() then
-        AceGUI:Release(self.frame)
-    end
-    if self.loadoutFrame and self.loadoutFrame:IsShown() then
-        AceGUI:Release(self.loadoutFrame)
-    end
-    if self.changelogFrame and self.changelogFrame:IsShown() then
-        AceGUI:Release(self.changelogFrame)
-    end
-    local frame = AceGUI:Create("Frame")
-    frame:SetCallback("OnClose", function(widget)
-        AceGUI:Release(widget)
-        self.loadoutFrame = nil
-    end)
-    frame:SetTitle(addonName)
-    frame:SetLayout("Flow")
-    frame:SetWidth(600)
-    frame:SetHeight(425)
     
     local header = AceGUI:Create("Label")
     header:SetText(self.ConvertIDToName[instance])
@@ -428,7 +425,7 @@ function addon:showLoadoutForInstance(instanceType, instance)
     local addonsChange = self:createAddonsFrame(scroll, instanceType, instance)
     self:createChangeOptionsButton(scroll, instanceType, instance)
 
-    self.loadoutFrame = frame
+    self.frame = frame
 
     if not specializationChange and not talentsChange and not gearsetChange and not addonsChange then
         AceGUI:Release(frame)

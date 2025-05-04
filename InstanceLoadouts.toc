@@ -1,5 +1,5 @@
 ## Interface: 110105
-## Version: 2.1.1
+## Version: 2.1.2
 ## Title: Instance Loadouts
 ## Notes: Reminds you to change specialization, talents, gear set and addons
 ## Author: Bisse
@@ -23,7 +23,7 @@
 Libs/embeds.xml
 
 core/Constants.lua
-core/customGroups.lua
+core/customInstances.lua
 core/Managers.lua
 core/Config.lua
 core/Reminder.lua

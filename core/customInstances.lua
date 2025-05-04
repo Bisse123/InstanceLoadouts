@@ -93,10 +93,10 @@ function addon:CreateAddInstanceButton()
         end
         local default = addon:generateDefaults()
         addon.db:RegisterDefaults(default)
-        if addon.customGroupFrame and addon.customGroupFrame:IsShown() then
-            addon:openCustomGroups()
+        if addon.frame and addon.frameType == "Custom" then
+            addon:openCustomInstances()
         end
-        if addon.frame and addon.frame:IsShown() then
+        if addon.frame and addon.frameType == "Config" then
             addon:openConfig()
         end
     end)
@@ -137,10 +137,10 @@ function addon:CreateRemoveInstanceButton(addButton)
         end
         local default = addon:generateDefaults()
         addon.db:RegisterDefaults(default)
-        if addon.customGroupFrame and addon.customGroupFrame:IsShown() then
-            addon:openCustomGroups()
+        if addon.frame and addon.frameType == "Custom" then
+            addon:openCustomInstances()
         end
-        if addon.frame and addon.frame:IsShown() then
+        if addon.frame and addon.frameType == "Config" then
             addon:openConfig()
         end
     end)
@@ -287,7 +287,7 @@ function addon:createCustomGroupsEncounterConfig(widget, instanceTypeValue, jour
         label:SetFont("Fonts\\FRIZQT__.TTF", 16, "OUTLINE")
         container:AddChild(label)
         local button = AceGUI:Create("Button")
-        button:SetText("Remove " .. encounterName .. " from custom groups")
+        button:SetText("Remove " .. encounterName .. " from custom Instances")
         button:SetRelativeWidth(0.5)
         button:SetCallback("OnClick", function(widget, callback)
             journalEncounterIDs[journalEncounterID] = nil
@@ -305,7 +305,7 @@ function addon:createCustomGroupsEncounterConfig(widget, instanceTypeValue, jour
             end
             local default = addon:generateDefaults()
             addon.db:RegisterDefaults(default)
-            addon:openCustomGroups()
+            addon:openCustomInstances()
         end)
         container:AddChild(button)
     end
@@ -333,7 +333,7 @@ function addon:createCustomGroupsInstanceConfig(scroll, instanceTypeValue, journ
             label:SetFont("Fonts\\FRIZQT__.TTF", 16, "OUTLINE")
             container:AddChild(label)
             local button = AceGUI:Create("Button")
-            button:SetText("Remove " .. instanceName .. " from custom groups")
+            button:SetText("Remove " .. instanceName .. " from custom instances")
             button:SetRelativeWidth(0.5)
             button:SetCallback("OnClick", function(widget, callback)
                 journalInstanceIDs[journalInstanceID] = nil
@@ -353,7 +353,7 @@ function addon:createCustomGroupsInstanceConfig(scroll, instanceTypeValue, journ
                 end
                 local default = addon:generateDefaults()
                 addon.db:RegisterDefaults(default)
-                addon:openCustomGroups()
+                addon:openCustomInstances()
             end)
             container:AddChild(button)
             if type(journalInstanceInfo) == "table" then
@@ -396,7 +396,7 @@ function addon:createCustomGroupsTierConfig(scroll, instanceTypeValue)
                 end
                 local default = addon:generateDefaults()
                 addon.db:RegisterDefaults(default)
-                addon:openCustomGroups()
+                addon:openCustomInstances()
             end)
             container:AddChild(button)
             if type(tierInfo) == "table" then
@@ -441,52 +441,34 @@ function addon:createCustomGroupsTabGroup(frame)
     frame:AddChild(customGroupsTabs)
 end
 
-function addon:openCustomGroups()
-    if self.frame and self.frame:IsShown() then
-        AceGUI:Release(self.frame)
-    end
-    if self.loadoutFrame and self.loadoutFrame:IsShown() then
-        AceGUI:Release(self.loadoutFrame)
-    end
-    if self.changelogFrame and self.changelogFrame:IsShown() then
-        AceGUI:Release(self.changelogFrame)
-    end
-    
-    local frame = self.customGroupFrame
-    if self.customGroupFrame and self.customGroupFrame:IsShown() then
-        self.customGroupFrame:ReleaseChildren()
+function addon:openCustomInstances()
+    local frame = self.frame
+    if self.frame and self.frameType == "Custom" then
+        self.frame:ReleaseChildren()
     else
+        if self.frame then
+            AceGUI:Release(self.frame)
+        end
+        self.frameType = "Custom"
         frame = AceGUI:Create("Frame")
-        frame:SetCallback("OnClose", function(widget)
-            AceGUI:Release(widget)
-            self.customGroupFrame = nil
-        end)
         frame:SetTitle(addonName)
         frame:SetLayout("Flow")
+        frame:SetCallback("OnClose", function(widget)
+            AceGUI:Release(widget)
+            self.frame = nil
+        end)
     end
-    
-    local container = AceGUI:Create("SimpleGroup")
-    container:SetLayout("Flow")
-    container:SetRelativeWidth(0.25)
-    frame:AddChild(container)
-    local button = AceGUI:Create("Button")
-    button:SetText("Loadouts Config")
-    button:SetRelativeWidth(0.5)
-    button:SetCallback("OnClick", function(widget, callback)
-        AceGUI:Release(frame)
-        addon:openConfig()
-    end)
-    frame:AddChild(button)
+    self:createOptionsButton(frame)
 
     self:createCustomGroupsTabGroup(frame)
 
-    self.customGroupFrame = frame
+    self.frame = frame
 end
 
-function addon:toggleCustomGroups()
-    if self.customGroupFrame and self.customGroupFrame:IsShown() then
-        AceGUI:Release(self.customGroupFrame)
+function addon:toggleCustomInstanceUI()
+    if addon.frame and addon.frameType == "Custom" then
+        AceGUI:Release(addon.frame)
     else
-        self:openCustomGroups()
+        addon:openCustomInstances()
     end
 end

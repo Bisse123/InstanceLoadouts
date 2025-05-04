@@ -15,6 +15,7 @@ local LibSerialize = LibStub("LibSerialize")
 local LibDeflate = LibStub("LibDeflate")
 
 local changelogTable
+local updatedChangelog
 
 local function createChangelog()
     local orderCount = CreateCounter(1)
@@ -48,6 +49,12 @@ local function createChangelog()
                 type = "description",
                 fontSize = "large",
             },
+            version212 = versionChanges("Version 2.1.2", {
+                "Changes in the Blizzard Options panel",
+                "Renamed Custom Groups to Custom Instances",
+                "Fixed frames repositioning after certain actions",
+                "Fixed frames not closing properly",
+            }),
             version211 = versionChanges("Version 2.1.1", {
                 "Added Garrison IDs to make them work as Open World",
             }),
@@ -112,33 +119,21 @@ local function createChangelog()
 end
 
 function addon:showChangelog()
-    if self.customGroupFrame and self.customGroupFrame:IsShown() then
-        AceGUI:Release(self.customGroupFrame)
-    end
-    if self.frame and self.frame:IsShown() then
+    if self.frame then
         AceGUI:Release(self.frame)
+        self.frame = nil
     end
-    if self.loadoutFrame and self.loadoutFrame:IsShown() then
-        AceGUI:Release(self.loadoutFrame)
-    end
-    if self.changelogFrame and self.changelogFrame:IsShown() then
-        AceGUI:Release(self.changelogFrame)
-    end
-    local changelogFrame = AceGUI:Create("Frame")
-    changelogFrame:SetTitle(addonName .. " Changelog")
-    changelogFrame:SetCallback("OnClose", function(widget)
-        AceGUI:Release(widget)
-        self.changelogFrame = nil
-    end)
-    self.changelogFrame = changelogFrame
-    AceConfigDialog:Open(addonName .. "-Changelog", self.changelogFrame)
+    self.frameType = "Changelog"
+    AceConfigDialog:Open(addonName .. "-Changelog")
 end
 
 function addon:toggleChangelog()
-    if self.changelogFrame and self.changelogFrame then
-        AceGUI:Release(self.changelogFrame)
+    if updatedChangelog then
+        AceGUI:Release(addon.frame)
+    elseif AceConfigDialog.OpenFrames[addonName .. "-Changelog"] then
+        AceConfigDialog:Close(addonName .. "-Changelog")
     else
-        self:showChangelog()
+        addon:showChangelog()
     end
 end
 
@@ -178,29 +173,13 @@ local function createBlizzOptions()
                 order = orderCount(),
                 name = "Author: " .. C_AddOns.GetAddOnMetadata(addonName, "Author"),
                 type = "description",
-                width = 2.5,
-                fontSize = "large",
-            },
-            slashCommandHeader = {
-                order = orderCount(),
-                name = "Slash commands",
-                type = "description",
-                width = 1,
                 fontSize = "large",
             },
             version = {
                 order = orderCount(),
                 name = "Version: " .. C_AddOns.GetAddOnMetadata(addonName, "Version"),
                 type = "description",
-                width = 2.5,
                 fontSize = "large",
-            },
-            slashCommand = {
-                order = orderCount(),
-                name = "/instanceloadouts\n/il",
-                type = "description",
-                width = 1,
-                fontSize = "medium",
             },
             patch = {
                 order = orderCount(),
@@ -217,6 +196,19 @@ local function createBlizzOptions()
                     return "https://discord.gg/esUtXwdQ"
                 end,
                 cmdHidden = true,
+            },
+            ["space" .. nextSpace] = newSpace(),
+            slashCommandHeader = {
+                order = orderCount(),
+                name = "Slash commands",
+                type = "description",
+                fontSize = "large",
+            },
+            slashCommand = {
+                order = orderCount(),
+                name = "/instanceloadouts\n/il",
+                type = "description",
+                fontSize = "medium",
             },
             ["space" .. nextSpace] = newSpace(),
             externalsAddonsHeader = {
@@ -246,7 +238,80 @@ local function createBlizzOptions()
                 inline = true,
                 args = showManagers(addon:getSupportedTalentManagers())
             },
-            ["space" .. nextSpace] = newSpace(),
+        }
+    }
+    return aboutTable
+end
+
+function addon:showOptions()
+    if self.frame then
+        AceGUI:Release(self.frame)
+        self.frame = nil
+    end
+    self.frameType = "Options"
+    AceConfigDialog:Open(addonName)
+end
+
+function addon:toggleOptions()
+    if AceConfigDialog.OpenFrames[addonName] then
+        AceConfigDialog:Close(addonName)
+    else
+        addon:showOptions()
+    end
+end
+
+local optionFunctions = {
+    ["Options"] = addon.toggleOptions,
+    ["Changelog"] = addon.toggleChangelog,
+    ["Custom Instances"] = addon.toggleCustomInstanceUI,
+    ["Loadouts"] = addon.toggleConfig,
+    ["Import"] = addon.toggleImport,
+    ["Export"] = addon.toggleExport,
+}
+
+function addon:executeOptionsFunction(info, button)
+    if AceConfigDialog.OpenFrames[addonName] then
+        AceConfigDialog:Close(addonName)
+    end
+    if AceConfigDialog.OpenFrames[addonName .. "-Changelog"] then
+        AceConfigDialog:Close(addonName .. "-Changelog")
+    end
+    optionFunctions[info.option.name]()
+end
+
+local function createOptionstable()
+    local orderCount = CreateCounter(1)
+    local nextSpace = 1
+    local function newSpace()
+        nextSpace = nextSpace + 1
+        return {
+            order = orderCount(),
+            name = " ",
+            type = "description",
+            fontSize = "large",
+        }
+    end
+    local optionsTable = {
+        name = addonName .. " Options",
+        type = "group",
+        handler = addon,
+        args = {
+            options = {
+                order = orderCount(),
+                name = "Options",
+                type = "execute",
+                desc = "Open Options",
+                func = "executeOptionsFunction",
+                guiHidden = true,
+            },
+            o = {
+                order = orderCount(),
+                name = "Options",
+                type = "execute",
+                desc = "Open Options",
+                func = "executeOptionsFunction",
+                guiHidden = true,
+            },
             changelogHeader = {
                 order = orderCount(),
                 name = "Changelog",
@@ -258,14 +323,14 @@ local function createBlizzOptions()
                 name = "Changelog",
                 type = "execute",
                 desc = "Open Changelog",
-                func = "toggleChangelog",
+                func = "executeOptionsFunction",
             },
             log = {
                 order = orderCount(),
                 name = "Changelog",
                 type = "execute",
                 desc = "Open Changelog",
-                func = "toggleChangelog",
+                func = "executeOptionsFunction",
                 guiHidden = true,
             },
             autoShowChangelog = {
@@ -282,25 +347,46 @@ local function createBlizzOptions()
                 end,
             },
             ["space" .. nextSpace] = newSpace(),
-            customGroupsHeader = {
+            ImportExport = {
                 order = orderCount(),
-                name = "Manage Custom Groups",
+                name = "Import/Export loadouts",
                 type = "description",
                 fontSize = "large",
             },
-            customgroups = {
+            import = {
                 order = orderCount(),
-                name = "Custom Groups",
+                name = "Import",
                 type = "execute",
-                desc = "Open Custom Groups",
-                func = "toggleCustomGroups",
+                desc = "Import Loadout",
+                func = "executeOptionsFunction",
             },
-            cg = {
+            export = {
                 order = orderCount(),
-                name = "Custom Groups",
+                name = "Export",
                 type = "execute",
-                desc = "Open Custom Groups",
-                func = "toggleCustomGroups",
+                desc = "Export Loadout",
+                func = "executeOptionsFunction",
+            },
+            ["space" .. nextSpace] = newSpace(),
+            customGroupsHeader = {
+                order = orderCount(),
+                name = "Manage Custom Instances",
+                type = "description",
+                fontSize = "large",
+            },
+            custominstance = {
+                order = orderCount(),
+                name = "Custom Instances",
+                type = "execute",
+                desc = "Open Custom Instances",
+                func = "executeOptionsFunction",
+            },
+            ci = {
+                order = orderCount(),
+                name = "Custom Instances",
+                type = "execute",
+                desc = "Open Custom Instances",
+                func = "executeOptionsFunction",
                 guiHidden = true,
             },
             ["space" .. nextSpace] = newSpace(),
@@ -315,41 +401,34 @@ local function createBlizzOptions()
                 name = "Loadouts",
                 type = "execute",
                 desc = "Open Loadouts",
-                func = "toggleConfig",
+                func = "executeOptionsFunction",
             },
             c = {
                 order = orderCount(),
                 name = "Loadouts",
                 type = "execute",
                 desc = "Open Loadouts",
-                func = "toggleConfig",
+                func = "executeOptionsFunction",
                 guiHidden = true,
             },
-            ["space" .. nextSpace] = newSpace(),
-            ImportExport = {
-                order = orderCount(),
-                name = "Import/Export loadouts",
-                type = "description",
-                fontSize = "large",
-            },
-            import = {
-                order = orderCount(),
-                name = "Import",
-                type = "execute",
-                desc = "Import Loadout",
-                func = "ShowImportFrame",
-            },
-            export = {
-                order = orderCount(),
-                name = "Export",
-                type = "execute",
-                desc = "Export Loadout",
-                func = "ShowExportFrame",
-            },
-            ["space" .. nextSpace] = newSpace(),
         }
     }
-    return aboutTable
+    return optionsTable
+end
+
+function addon:createOptionsButton(frame)
+    local container = AceGUI:Create("SimpleGroup")
+    container:SetLayout("Flow")
+    container:SetRelativeWidth(0.25)
+    frame:AddChild(container)
+    local button = AceGUI:Create("Button")
+    button:SetText("Open Options")
+    button:SetRelativeWidth(0.5)
+    button:SetCallback("OnClick", function(widget, callback)
+        AceGUI:Release(frame)
+        self:toggleOptions()
+    end)
+    frame:AddChild(button)
 end
 
 function addon:convertDB()
@@ -548,15 +627,16 @@ function addon:InitData()
             self:checkIfIsTrackedInstance()
             return
         end
-        local changelogFrame = AceGUI:Create("Frame")
-        changelogFrame:SetTitle(addonName .. " Changelog")
-        changelogFrame:SetCallback("OnClose", function(widget)
+        local frame = AceGUI:Create("Frame")
+        updatedChangelog = true
+        frame:SetCallback("OnClose", function(widget)
             AceGUI:Release(widget)
-            self.changelogFrame = nil
+            self.frame = nil
+            updatedChangelog = false
             self:checkIfIsTrackedInstance()
         end)
-        self.changelogFrame = changelogFrame
-        AceConfigDialog:Open(addonName .. "-Changelog", self.changelogFrame)
+        self.frame = frame
+        AceConfigDialog:Open(addonName .. "-Changelog", self.frame)
     end)
     self:RegisterEvent("ACTIVE_DELVE_DATA_UPDATE", function()
         addon:checkIfIsTrackedInstance()
@@ -593,8 +673,11 @@ function addon:OnInitialize()
     self.db = LibStub("AceDB-3.0"):New("InstanceLoadoutsDB", globalDefaults)
 
     local aboutTable = createBlizzOptions()
-    AceConfig:RegisterOptionsTable(addonName, aboutTable, {"instanceloadouts", "il"})
-    self.aboutFrame = AceConfigDialog:AddToBlizOptions(addonName, addonName)
+    AceConfig:RegisterOptionsTable(addonName .. "-About", aboutTable)
+    AceConfigDialog:AddToBlizOptions(addonName .. "-About", addonName)
+    local optionsTable = createOptionstable()
+    AceConfig:RegisterOptionsTable(addonName, optionsTable, {"instanceloadouts", "il"})
+    AceConfigDialog:AddToBlizOptions(addonName, "Options", addonName)
     changelogTable = createChangelog()
     AceConfig:RegisterOptionsTable(addonName .. "-Changelog", changelogTable)
     self:RegisterEvent("PLAYER_LOGIN", function()
