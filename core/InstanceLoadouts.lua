@@ -19,6 +19,7 @@ local updatedChangelog
 
 local function createChangelog()
     local orderCount = CreateCounter(1)
+    local versionCount = CreateCounter(1)
     local function versionChanges(name, changes)
         local change = {
             order = orderCount(),
@@ -49,32 +50,43 @@ local function createChangelog()
                 type = "description",
                 fontSize = "large",
             },
-            version213 = versionChanges("Version 2.1.3", {
+            ["version" .. versionCount()] = 
+                versionChanges("Version 2.1.4", {
+                "Export frame fix",
+            }),
+            ["version" .. versionCount()] = 
+                versionChanges("Version 2.1.3", {
                 "More frames fixes",
             }),
-            version212 = versionChanges("Version 2.1.2", {
+            ["version" .. versionCount()] = 
+                versionChanges("Version 2.1.2", {
                 "Changes in the Blizzard Options panel",
                 "Renamed Custom Groups to Custom Instances",
                 "Fixed frames repositioning after certain actions",
                 "Fixed frames not closing properly",
             }),
-            version211 = versionChanges("Version 2.1.1", {
+            ["version" .. versionCount()] = 
+                versionChanges("Version 2.1.1", {
                 "Added Garrison IDs to make them work as Open World",
             }),
-            version210 = versionChanges("Version 2.1.0", {
+            ["version" .. versionCount()] = 
+                versionChanges("Version 2.1.0", {
                 "Added support for Simple Addon Manager. Does not currently support the import/export feature.",
             }),
-            version202 = versionChanges("Version 2.0.2", {
+            ["version" .. versionCount()] = 
+                versionChanges("Version 2.0.2", {
                 "Fixed issue when entering a raid that is not being tracked",
                 "Fixed issue caused when saving, deleting or changing gearsets",
                 "Fixed a bug which occured if a player removed an encounter from custom groups while being inside the instance of that encounter",
                 "Changed name of button in reminder from Options to Loadouts Config",
                 "Fixed Loadouts Config button in reminder for dungeons and raids",
             }),
-            version201 = versionChanges("Version 2.0.1", {
+            ["version" .. versionCount()] = 
+                versionChanges("Version 2.0.1", {
                 "Fixed Raid Loadouts",
             }),
-            version200 = versionChanges("Version 2.0.0", {
+            ["version" .. versionCount()] = 
+                versionChanges("Version 2.0.0", {
                 "NEW FEATURE: Custom groups -> Add Loadouts for any Dungeon or Raid from the Encounter Journal",
                 "NOTE: When adding a custom Raid remember to input npcIDs for each boss if you wish to get reminded to swap loadouts for that boss",
                 "Added button in Encounter Journal to add custom instances to loadouts",
@@ -88,11 +100,13 @@ local function createChangelog()
                 "Export now includes custom groups",
                 "Import now includes custom groups and will use appropiate Locale names",
             }),
-            version101 = versionChanges("Version 1.0.1", {
+            ["version" .. versionCount()] = 
+                versionChanges("Version 1.0.1", {
                 "Added Better Addon List as an Addon Manager. Does not currently support the import/export feature.",
                 "Swapping between Addon Managers will reset the addon loadouts each time",
             }),
-            version100 = versionChanges("Version 1.0.0", {
+            ["version" .. versionCount()] = 
+                versionChanges("Version 1.0.0", {
                 "Added option to automatically show changelog on new update (Enabled by default)",
                 "Added feature to import Addons/Talents loadouts (/il import)",
                 "Added feature to Export Addons/Talents loadouts (/il export)",
@@ -100,7 +114,8 @@ local function createChangelog()
                 "Importing/Exporting talents loadouts requires a Talent manager",
                 "Restructure of codebase",
             }),
-            version010 = versionChanges("Version 0.1.0", {
+            ["version" .. versionCount()] = 
+                versionChanges("Version 0.1.0", {
                 "Added Changelog window (/il log)",
                 "Added loadouts for Delves",
                 "Added loadouts for Arenas",
@@ -110,10 +125,12 @@ local function createChangelog()
                 "Fixed bug with Operation: Mechagon - Workshop not showing loadout when entering dungeon",
                 "Ensured that only one GUI element can be open at a time",
             }),
-            version001 = versionChanges("Version 0.0.1", {
+            ["version" .. versionCount()] = 
+                versionChanges("Version 0.0.1", {
                 "Fixed a bug when turning off override spec but still having override talents on where it would choose the talent override instead of the default",
             }),
-            version000 = versionChanges("Version 0.0.0", {
+            ["version" .. versionCount()] = 
+                versionChanges("Version 0.0.0", {
                 "Initial release",
             }),
         },

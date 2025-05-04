@@ -933,6 +933,7 @@ function addon:ShowExportFrame()
         end
         getExportString(exportType, talentsCheckbox)
     end)
+    self.frame = frame
 end
 function addon:toggleExport()
     if addon.frame and addon.frameType == "Export" then

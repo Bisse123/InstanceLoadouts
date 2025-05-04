@@ -1,5 +1,5 @@
 ## Interface: 110105
-## Version: 2.1.3
+## Version: 2.1.4
 ## Title: Instance Loadouts
 ## Notes: Reminds you to change specialization, talents, gear set and addons
 ## Author: Bisse
