@@ -448,6 +448,7 @@ function addon:openCustomInstances()
     else
         if self.frame then
             AceGUI:Release(self.frame)
+            self.frame = nil
         end
         self.frameType = "Custom"
         frame = AceGUI:Create("Frame")
@@ -468,6 +469,7 @@ end
 function addon:toggleCustomInstanceUI()
     if addon.frame and addon.frameType == "Custom" then
         AceGUI:Release(addon.frame)
+        addon.frame = nil
     else
         addon:openCustomInstances()
     end

@@ -366,6 +366,7 @@ function addon:openConfig()
     else
         if self.frame then
             AceGUI:Release(self.frame)
+            self.frame = nil
         end
         self.frameType = "Config"
         frame = AceGUI:Create("Frame")
@@ -390,6 +391,7 @@ end
 function addon:toggleConfig()
     if addon.frame and addon.frameType == "Config" then
         AceGUI:Release(addon.frame)
+        addon.frame = nil
     else
         addon:openConfig()
     end

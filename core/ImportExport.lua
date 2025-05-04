@@ -526,6 +526,7 @@ function addon:ShowImportFrame()
     else
         if self.frame then
             AceGUI:Release(self.frame)
+            self.frame = nil
         end
         self.frameType = "Import"
         frame = AceGUI:Create("Frame")
@@ -612,6 +613,7 @@ function addon:ShowImportFrame()
                     tinsert(importQueue, {func = "Talent", loadouts = loadouts, loadoutInfo = {Talents = loadoutInfo.Talents}, partialImport = partialImport:GetValue()})
                 end
                 AceGUI:Release(frame)
+                self.frame = nil
                 addon:getNextImport()
             end)
 
@@ -657,6 +659,7 @@ end
 function addon:toggleImport()
     if addon.frame and addon.frameType == "Import" then
         AceGUI:Release(addon.frame)
+        addon.frame = nil
     else
         addon:ShowImportFrame()
     end
@@ -848,6 +851,7 @@ function addon:ShowExportFrame()
     else
         if self.frame then
             AceGUI:Release(self.frame)
+            self.frame = nil
         end
         self.frameType = "Export"
         frame = AceGUI:Create("Frame")
@@ -933,6 +937,7 @@ end
 function addon:toggleExport()
     if addon.frame and addon.frameType == "Export" then
         AceGUI:Release(addon.frame)
+        addon.frame = nil
     else
         addon:ShowExportFrame()
     end

@@ -373,6 +373,7 @@ function addon:createChangeOptionsButton(frame, instanceType, instance)
     button:SetHeight(35)
     button:SetCallback("OnClick", function(widget, callback, mouseButton)
         AceGUI:Release(addon.frame)
+        addon.frame = nil
         addon.ConfigView.instanceType = instanceType
         addon.ConfigView.instance = instance
         addon.ConfigView.encounter = encounter
@@ -391,6 +392,7 @@ function addon:showLoadoutForInstance(instanceType, instance)
     else
         if self.frame then
             AceGUI:Release(self.frame)
+            self.frame = nil
         end
         self.frameType = "Reminder"
         frame = AceGUI:Create("Frame")
@@ -428,7 +430,10 @@ function addon:showLoadoutForInstance(instanceType, instance)
     self.frame = frame
 
     if not specializationChange and not talentsChange and not gearsetChange and not addonsChange then
-        AceGUI:Release(frame)
+        if self.frame then
+            AceGUI:Release(self.frame)
+            self.frame = nil
+        end
     end
 end
 

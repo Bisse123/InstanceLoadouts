@@ -49,6 +49,9 @@ local function createChangelog()
                 type = "description",
                 fontSize = "large",
             },
+            version213 = versionChanges("Version 2.1.3", {
+                "More frames fixes",
+            }),
             version212 = versionChanges("Version 2.1.2", {
                 "Changes in the Blizzard Options panel",
                 "Renamed Custom Groups to Custom Instances",
@@ -119,10 +122,6 @@ local function createChangelog()
 end
 
 function addon:showChangelog()
-    if self.frame then
-        AceGUI:Release(self.frame)
-        self.frame = nil
-    end
     self.frameType = "Changelog"
     AceConfigDialog:Open(addonName .. "-Changelog")
 end
@@ -130,9 +129,15 @@ end
 function addon:toggleChangelog()
     if updatedChangelog then
         AceGUI:Release(addon.frame)
+        addon.frame = nil
     elseif AceConfigDialog.OpenFrames[addonName .. "-Changelog"] then
         AceConfigDialog:Close(addonName .. "-Changelog")
+        addon.frame = nil
     else
+        if addon.frame then
+            AceGUI:Release(addon.frame)
+            addon.frame = nil
+        end
         addon:showChangelog()
     end
 end
@@ -244,10 +249,6 @@ local function createBlizzOptions()
 end
 
 function addon:showOptions()
-    if self.frame then
-        AceGUI:Release(self.frame)
-        self.frame = nil
-    end
     self.frameType = "Options"
     AceConfigDialog:Open(addonName)
 end
@@ -255,7 +256,12 @@ end
 function addon:toggleOptions()
     if AceConfigDialog.OpenFrames[addonName] then
         AceConfigDialog:Close(addonName)
+        addon.frame = nil
     else
+        if addon.frame then
+            AceGUI:Release(addon.frame)
+            addon.frame = nil
+        end
         addon:showOptions()
     end
 end
@@ -275,6 +281,9 @@ function addon:executeOptionsFunction(info, button)
     end
     if AceConfigDialog.OpenFrames[addonName .. "-Changelog"] then
         AceConfigDialog:Close(addonName .. "-Changelog")
+    end
+    if self.frame then
+        AceGUI:Release(self.frame)
     end
     optionFunctions[info.option.name]()
 end
