@@ -23,7 +23,7 @@ local instanceTypeOrder = {
 -- is changed later and used to save last seen configs
 -- or when pressing f in the reminder window to show current instance/boss
 addon.ConfigView = {
-    ["instanceType"] = "Dungeon",
+    ["instanceType"] = instanceTypeOrder[1],
     ["instance"] = -1,
     ["encounter"] = -1,
 }
@@ -357,23 +357,20 @@ function addon:openConfig()
         self:Print("No specialization found")
         return
     end
-    if self.customGroupFrame and self.customGroupFrame:IsShown() then
-        AceGUI:Release(self.customGroupFrame)
-    end
-    if self.changelogFrame and self.changelogFrame:IsShown() then
-        AceGUI:Release(self.changelogFrame)
-    end
-    if self.loadoutFrame and self.loadoutFrame:IsShown() then
-        AceGUI:Release(self.loadoutFrame)
-    end
     if self.manager:getAddonManager() then
         self:checkAddonManager()
     end
     local frame = self.frame
-    if self.frame and self.frame:IsShown() then
+    if self.frame and self.frameType == "Config" then
         self.frame:ReleaseChildren()
     else
+        if self.frame then
+            AceGUI:Release(self.frame)
+        end
+        self.frameType = "Config"
         frame = AceGUI:Create("Frame")
+        frame:SetTitle(addonName)
+        frame:SetLayout("Flow")
         frame:SetHeight(550)
         frame:SetWidth(900)
         frame:SetCallback("OnClose", function(widget)
@@ -381,21 +378,8 @@ function addon:openConfig()
             self.frame = nil
             addon:checkIfIsTrackedInstance()
         end)
-        frame:SetTitle(addonName)
-        frame:SetLayout("Flow")
     end
-    local container = AceGUI:Create("SimpleGroup")
-    container:SetLayout("Flow")
-    container:SetRelativeWidth(0.25)
-    frame:AddChild(container)
-    local button = AceGUI:Create("Button")
-    button:SetText("Custom Groups Config")
-    button:SetRelativeWidth(0.5)
-    button:SetCallback("OnClick", function(widget, callback)
-        AceGUI:Release(frame)
-        addon:openCustomGroups()
-    end)
-    frame:AddChild(button)
+    self:createOptionsButton(frame)
 
     self:createInstanceTypeConfig(frame)
 
@@ -404,9 +388,9 @@ end
 
 -- Calls this when using /il c or /il config
 function addon:toggleConfig()
-    if self.frame and self.frame:IsShown() then
-        AceGUI:Release(self.frame)
+    if addon.frame and addon.frameType == "Config" then
+        AceGUI:Release(addon.frame)
     else
-        self:openConfig()
+        addon:openConfig()
     end
 end

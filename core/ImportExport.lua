@@ -520,19 +520,29 @@ function addon:getNextImport()
 end
 
 function addon:ShowImportFrame()
-    local frame = AceGUI:Create("Frame")
-    frame:SetCallback("OnClose", function(widget)
-        AceGUI:Release(widget)
-    end)
-    frame:SetTitle(addonName)
-    frame:SetLayout("Flow")
+    local frame = self.frame
+    if self.frame and self.frameType == "Import" then
+        self.frame:ReleaseChildren()
+    else
+        if self.frame then
+            AceGUI:Release(self.frame)
+        end
+        self.frameType = "Import"
+        frame = AceGUI:Create("Frame")
+        frame:SetTitle(addonName)
+        frame:SetLayout("Flow")
+        frame:SetCallback("OnClose", function(widget)
+            AceGUI:Release(widget)
+            self.frame = nil
+        end)
+    end
+    self:createOptionsButton(frame)
 
-    -- local header = AceGUI:Create("Label")
-    -- header:SetText("Import")
-    -- header:SetRelativeWidth(0.5)
-    -- header:SetFont("Fonts\\FRIZQT__.TTF", 30, "OUTLINE")
-    -- frame:AddChild(header)
-    
+    local container = AceGUI:Create("SimpleGroup")
+    container:SetLayout("Flow")
+    container:SetFullWidth(true)
+    frame:AddChild(container)
+
     local container = AceGUI:Create("SimpleGroup")
     container:SetLayout("Flow")
     container:SetRelativeWidth(0.25)
@@ -641,6 +651,15 @@ function addon:ShowImportFrame()
     multiEditbox:SetFullHeight(true)
     multiEditbox:SetFullWidth(true)
     frame:AddChild(multiEditbox)
+    self.frame = frame
+end
+
+function addon:toggleImport()
+    if addon.frame and addon.frameType == "Import" then
+        AceGUI:Release(addon.frame)
+    else
+        addon:ShowImportFrame()
+    end
 end
 
 function addon:export(exportType, loadouts, loadoutInfo)
@@ -823,12 +842,23 @@ local exportFunctions = {
     ["Talent"] = addon.ExportTalents,
 }
 function addon:ShowExportFrame()
-    local frame = AceGUI:Create("Frame")
-    frame:SetCallback("OnClose", function(widget)
-        AceGUI:Release(widget)
-    end)
-    frame:SetTitle(addonName)
-    frame:SetLayout("Flow")
+    local frame = self.frame
+    if self.frame and self.frameType == "Export" then
+        self.frame:ReleaseChildren()
+    else
+        if self.frame then
+            AceGUI:Release(self.frame)
+        end
+        self.frameType = "Export"
+        frame = AceGUI:Create("Frame")
+        frame:SetTitle(addonName)
+        frame:SetLayout("Flow")
+        frame:SetCallback("OnClose", function(widget)
+            AceGUI:Release(widget)
+            self.frame = nil
+        end)
+    end
+    self:createOptionsButton(frame)
 
     local header = AceGUI:Create("Label")
     header:SetText("Export Loadouts")
@@ -848,20 +878,6 @@ function addon:ShowExportFrame()
 
     local multiEditbox = AceGUI:Create("MultiLineEditBox")
     multiEditbox:SetLabel("Export String")
-    -- local exportString = exportFunctions["Addon and Talent"](addon)
-    -- if not exportString then
-    --     addon:showMissingManagers("Addon and Talent")
-    -- else
-    --     if exportString == "" then
-    --         header:SetText("No Loadouts to Export")
-    --     else
-    --         header:SetText("Export Loadouts")
-    --     end
-    --     multiEditbox:SetText(exportString)
-    --     multiEditbox:SetCallback("OnTextChanged", function()
-    --         multiEditbox:SetText(exportString)
-    --     end)
-    -- end
     multiEditbox:DisableButton(true)
     multiEditbox:SetFullHeight(true)
     multiEditbox:SetFullWidth(true)
@@ -913,4 +929,11 @@ function addon:ShowExportFrame()
         end
         getExportString(exportType, talentsCheckbox)
     end)
+end
+function addon:toggleExport()
+    if addon.frame and addon.frameType == "Export" then
+        AceGUI:Release(addon.frame)
+    else
+        addon:ShowExportFrame()
+    end
 end
