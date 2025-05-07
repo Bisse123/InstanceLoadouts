@@ -1,5 +1,18 @@
 local addonName, addon = ...
 
+-- Localize global functions
+local EJ_GetTierInfo = EJ_GetTierInfo
+local EJ_GetNumTiers = EJ_GetNumTiers
+local EJ_GetInstanceByIndex = EJ_GetInstanceByIndex
+local EJ_SelectInstance = EJ_SelectInstance
+local EJ_GetEncounterInfoByIndex = EJ_GetEncounterInfoByIndex
+local EJ_SelectTier = EJ_SelectTier
+local GetRealZoneText = GetRealZoneText
+local GetNumBattlegroundTypes = GetNumBattlegroundTypes
+local GetBattlegroundInfo = GetBattlegroundInfo
+local tinsert = tinsert
+local CopyTable = CopyTable
+
 addon.ConvertIDToName = {}
 
 -- Raid boss npc IDs
@@ -60,7 +73,6 @@ function addon:getCurrentSeasonRaids()
     local raid = self.instanceGroups.Raid
     for instanceIdx = 2, 99 do
         local journalInstanceID, instanceName, _, _, _, _, _, _, _, _, instanceID = EJ_GetInstanceByIndex(instanceIdx, true)
-        -- local instanceName, _, _, _, _, _, _, _, _, instanceID = EJ_GetInstanceInfo(journalInstanceID)
         if not journalInstanceID then
             break
         end

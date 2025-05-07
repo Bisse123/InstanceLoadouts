@@ -1,5 +1,18 @@
 local addonName, addon = ...
 
+-- Localize global functions
+local GetSpecialization = GetSpecialization
+local strfind = strfind
+local strsplit = strsplit
+local tonumber = tonumber
+local gsub = gsub
+local pairs = pairs
+local ipairs = ipairs
+local tinsert = tinsert
+local next = next
+local EJ_GetInstanceInfo = EJ_GetInstanceInfo
+local EJ_GetEncounterInfo = EJ_GetEncounterInfo
+
 local AceGUI = LibStub("AceGUI-3.0")
 
 -- Order of frames when creating GUI

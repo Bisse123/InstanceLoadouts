@@ -3,6 +3,21 @@ local addonName, addon = ...
 -- Ace3 libs
 local AceGUI = LibStub("AceGUI-3.0")
 
+-- Localize global functions
+local GetSpecialization = GetSpecialization
+local GetSpecializationInfo = GetSpecializationInfo
+local GetInstanceInfo = GetInstanceInfo
+local tContains = tContains
+local strfind = strfind
+local strsplit = strsplit
+local tonumber = tonumber
+local C_SpecializationInfo = C_SpecializationInfo
+local C_ClassTalents = C_ClassTalents
+local C_AddOns = C_AddOns
+local C_EquipmentSet = C_EquipmentSet
+local C_UI = C_UI
+local UnitGUID = UnitGUID
+
 local isGarrison = {
     1152, -- Horde Garrison lvl 1
     1330, -- Horde Garrison lvl 2

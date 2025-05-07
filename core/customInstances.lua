@@ -1,5 +1,20 @@
 local addonName, addon = ...
 
+-- WoW API function declarations
+local CreateFrame = CreateFrame
+local EJ_GetCurrentTier = EJ_GetCurrentTier
+local EJ_GetEncounterInfoByIndex = EJ_GetEncounterInfoByIndex
+local EJ_GetInstanceByIndex = EJ_GetInstanceByIndex
+local EJ_GetInstanceInfo = EJ_GetInstanceInfo
+local EJ_GetEncounterInfo = EJ_GetEncounterInfo
+local EJ_GetNumTiers = EJ_GetNumTiers
+local EJ_GetTierInfo = EJ_GetTierInfo
+local EncounterJournal_DisplayInstance = EncounterJournal_DisplayInstance
+local EncounterJournal_IsRaidTabSelected = EncounterJournal_IsRaidTabSelected
+local EventRegistry = EventRegistry
+local tinsert = tinsert
+local tremove = tremove
+
 local AceGUI = LibStub("AceGUI-3.0")
 
 local customGroupsConfigView = {

@@ -1,5 +1,14 @@
 local addonName, addon = ...
 
+-- Localize global functions
+local CreateCounter = CreateCounter
+local GetSpecialization = GetSpecialization
+local C_AddOns = C_AddOns
+local C_Timer = C_Timer
+local CopyTable = CopyTable
+local pairs = pairs
+local ipairs = ipairs
+
 -- Add addon functions to global table
 _G[addonName] = addon
 

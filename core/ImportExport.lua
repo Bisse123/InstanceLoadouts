@@ -1,5 +1,18 @@
 local addonName, addon = ...
 
+-- Localize global functions
+local C_AddOns = C_AddOns
+local GetClassInfo = GetClassInfo
+local tremove = tremove
+local next = next
+local pairs = pairs
+local ipairs = ipairs
+local tinsert = tinsert
+local string = string
+local select = select
+local type = type
+local strsplit = strsplit
+
 local AceGUI = LibStub("AceGUI-3.0")
 
 local LibSerialize = LibStub("LibSerialize")
@@ -365,7 +378,6 @@ function addon:importTalents(loadouts, loadoutInfo, partialImport)
     local talentNameToLoadoutID = {}
     for name, talentInfo in pairs(loadoutInfo.Talents) do
         local classID, specID = talentInfo.classID, talentInfo.specID
-        -- local name = talentInfo.name
         local currentLoadouts = self.manager:getTalentLoadouts(specID, classID)
         for _, currentLoadout in pairs(currentLoadouts) do
             if name == currentLoadout.name then
@@ -560,7 +572,6 @@ function addon:ShowImportFrame()
     partialImport:SetDisabled(true)
     partialImport:SetLabel("Partial Import")
     partialImport:SetRelativeWidth(0.33)
-    -- partialImport:SetHeight(150)
     partialImport:SetDescription("If checked then only loadouts that are defined (Not set to none) will be imported")
     frame:AddChild(partialImport)
 
@@ -569,7 +580,6 @@ function addon:ShowImportFrame()
     autoAddonImport:SetDisabled(true)
     autoAddonImport:SetLabel("Auto Import Addons")
     autoAddonImport:SetRelativeWidth(0.33)
-    -- autoAddonImport:SetHeight(150)
     autoAddonImport:SetDescription("If checked then addon sets will override sets in Addon Control Panel and any missing addons will be removed from the sets without warning")
     frame:AddChild(autoAddonImport)
 
@@ -578,7 +588,6 @@ function addon:ShowImportFrame()
     autoTalentImport:SetDisabled(true)
     autoTalentImport:SetLabel("Auto Import Talents")
     autoTalentImport:SetRelativeWidth(0.33)
-    -- autoTalentImport:SetHeight(150)
     autoTalentImport:SetDescription("If checked then talent loadouts will override loadouts in Talent Loadout Manager without warning")
     frame:AddChild(autoTalentImport)
 

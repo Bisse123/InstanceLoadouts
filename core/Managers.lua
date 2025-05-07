@@ -1,5 +1,21 @@
 local addonName, addon = ...
 
+-- Localize global functions
+local C_AddOns = C_AddOns
+local C_ClassTalents = C_ClassTalents
+local C_Timer = C_Timer
+local C_Traits = C_Traits
+local C_EquipmentSet = C_EquipmentSet
+local UnitGUID = UnitGUID
+local GetSpecializationInfo = GetSpecializationInfo
+local GetNumSpecializations = GetNumSpecializations
+local ChatEdit_SendText = ChatEdit_SendText
+local C_UI = C_UI
+local tinsert = tinsert
+local next = next
+local pairs = pairs
+local ipairs = ipairs
+
 -- Populated with external information
 -- ExternalInfo = {
 --     ["Specialization"] = {[specIdx] = spec Name},
@@ -202,7 +218,7 @@ end
 local function loadSAMAddons(addonSet)
     local samProfile = SAM:GetModule("Profile")
     samProfile:LoadAddonsFromProfile(addonSet)
-    ReloadUI()
+    C_UI.Reload()
 end
 
 local function resetAddonLoadouts()
