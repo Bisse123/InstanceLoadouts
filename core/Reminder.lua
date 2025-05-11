@@ -386,6 +386,13 @@ end
 
 -- Main function to show the reminder window
 function addon:showLoadoutForInstance(instanceType, instance)
+    if not self.db.char.loadouts[instanceType] or not self.db.char.loadouts[instanceType][instance] then
+        if self.frame then
+            AceGUI:Release(self.frame)
+            self.frame = nil
+        end
+        return
+    end
     local frame = self.frame
     if self.frame and self.frameType == "Reminder" then
         self.frame:ReleaseChildren()
