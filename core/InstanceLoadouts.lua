@@ -53,6 +53,8 @@ local function createChangelog()
             ["version" .. versionCount()] = 
                 versionChanges("Version 2.1.4", {
                 "Export frame fix",
+                "Fixed issue with wrongfully telling to swap talents after swapping specialization",
+                "Added safety check in reminder logic",
             }),
             ["version" .. versionCount()] = 
                 versionChanges("Version 2.1.3", {

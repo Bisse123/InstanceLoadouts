@@ -47,9 +47,11 @@ function addon:createSpecializationFrame(frame, instanceType, instance)
                 C_SpecializationInfo.SetSpecialization(specializationSet)
                 addon:RegisterEvent("ACTIVE_PLAYER_SPECIALIZATION_CHANGED", function()
                     if specializationSet == GetSpecialization() then
-                        addon:checkIfIsTrackedInstance()
                         addon:UnregisterEvent("ACTIVE_PLAYER_SPECIALIZATION_CHANGED")
                         addon:UnregisterEvent("SPECIALIZATION_CHANGE_CAST_FAILED")
+                        C_Timer.After(0, function()
+                            addon:checkIfIsTrackedInstance()
+                        end)
                     end
                 end)
                 addon:RegisterEvent("SPECIALIZATION_CHANGE_CAST_FAILED", function()
