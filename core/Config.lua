@@ -41,9 +41,13 @@ addon.ConfigView = {
     ["encounter"] = -1,
 }
 
--- Create the config frames to change to change options and write to db
+---Creates configuration options for a specific instance or encounter
+---@param widget table The AceGUI widget to add elements to
+---@param instanceTypeValue string The type of instance (e.g. "Dungeon", "Raid")
+---@param instanceValue number The instance ID
 function addon:createOptionsConfig(widget, instanceTypeValue, instanceValue)
-    local dbEntry = self.db.char.loadouts[instanceTypeValue][instanceValue]
+    local dbLoadouts = self.db.char.loadouts
+    local dbLoadout = dbLoadouts[instanceTypeValue][instanceValue]
     local instanceHeader = AceGUI:Create("Label")
     instanceHeader:SetText(instanceTypeValue)
     instanceHeader:SetFont("Fonts\\FRIZQT__.TTF", 26, "OUTLINE")
@@ -77,24 +81,24 @@ function addon:createOptionsConfig(widget, instanceTypeValue, instanceValue)
             dropdown:SetLabel(type)
             if type == "Specialization" then
                 dropdown:SetList(info)
-                dropdown:SetValue(dbEntry[type])
+                dropdown:SetValue(dbLoadout[type])
                 dropdown:SetCallback("OnValueChanged", function(widget, callback, key)
-                    dbEntry[type] = key
-                    dbEntry["Talents"] = -1
+                    dbLoadout[type] = key
+                    dbLoadout["Talents"] = -1
                     addon:openConfig()
                 end)
             elseif type == "Talents" then
                 dropdown:SetList(info)
-                dropdown:SetValue(dbEntry[type])
-                dropdown:SetDisabled(dbEntry.Specialization == -1)
+                dropdown:SetValue(dbLoadout[type])
+                dropdown:SetDisabled(dbLoadout.Specialization == -1)
                 dropdown:SetCallback("OnValueChanged", function(widget, callback, key)
-                    dbEntry[type] = key
+                    dbLoadout[type] = key
                 end)
             else
                 dropdown:SetList(info)
-                dropdown:SetValue(dbEntry[type])
+                dropdown:SetValue(dbLoadout[type])
                 dropdown:SetCallback("OnValueChanged", function(widget, callback, key)
-                    dbEntry[type] = key
+                    dbLoadout[type] = key
                 end)
             end
             container:AddChild(dropdown)
@@ -105,42 +109,42 @@ function addon:createOptionsConfig(widget, instanceTypeValue, instanceValue)
             checkbox:SetLabel("Override Default " .. type)
             if type == "Specialization" then
                 dropdown:SetList(info)
-                dropdown:SetValue(dbEntry["Override Default " .. type] and dbEntry[type] or self.db.char.loadouts[instanceTypeValue][-1][type])
-                dropdown:SetDisabled(not dbEntry["Override Default " .. type])
+                dropdown:SetValue(dbLoadout["Override Default " .. type] and dbLoadout[type] or self.db.char.loadouts[instanceTypeValue][-1][type])
+                dropdown:SetDisabled(not dbLoadout["Override Default " .. type])
                 dropdown:SetCallback("OnValueChanged", function(widget, callback, key)
-                    dbEntry[type] = key
-                    dbEntry["Talents"] = -1
+                    dbLoadout[type] = key
+                    dbLoadout["Talents"] = -1
                     addon:openConfig()
                 end)
-                checkbox:SetValue(dbEntry["Override Default " .. type])
+                checkbox:SetValue(dbLoadout["Override Default " .. type])
                 checkbox:SetCallback("OnValueChanged", function(widget, callback, value)
-                    dbEntry["Override Default " .. type] = value
+                    dbLoadout["Override Default " .. type] = value
                     addon:openConfig()
                 end)
             elseif type == "Talents" then
                 dropdown:SetList(info)
-                dropdown:SetValue(dbEntry["Override Default Specialization"] and dbEntry["Override Default " .. type] and dbEntry[type] or self.db.char.loadouts[instanceTypeValue][-1][type])
-                dropdown:SetDisabled(not dbEntry["Override Default " .. type] or not dbEntry["Override Default Specialization"] or dbEntry.Specialization == -1)
+                dropdown:SetValue(dbLoadout["Override Default Specialization"] and dbLoadout["Override Default " .. type] and dbLoadout[type] or self.db.char.loadouts[instanceTypeValue][-1][type])
+                dropdown:SetDisabled(not dbLoadout["Override Default " .. type] or not dbLoadout["Override Default Specialization"] or dbLoadout.Specialization == -1)
                 dropdown:SetCallback("OnValueChanged", function(widget, callback, key)
-                    dbEntry[type] = key
+                    dbLoadout[type] = key
                 end)
-                checkbox:SetValue(dbEntry["Override Default " .. type] and dbEntry["Override Default Specialization"] and dbEntry.Specialization ~= -1)
-                checkbox:SetDisabled(not dbEntry["Override Default Specialization"] or dbEntry.Specialization == -1)
+                checkbox:SetValue(dbLoadout["Override Default " .. type] and dbLoadout["Override Default Specialization"] and dbLoadout.Specialization ~= -1)
+                checkbox:SetDisabled(not dbLoadout["Override Default Specialization"] or dbLoadout.Specialization == -1)
                 checkbox:SetCallback("OnValueChanged", function(widget, callback, value)
-                    dbEntry["Override Default " .. type] = value
+                    dbLoadout["Override Default " .. type] = value
                     addon:openConfig()
                 end)
             else
                 dropdown:SetList(info)
-                dropdown:SetValue(dbEntry["Override Default " .. type] and dbEntry[type] or self.db.char.loadouts[instanceTypeValue][-1][type])
-                dropdown:SetDisabled(not dbEntry["Override Default " .. type])
+                dropdown:SetValue(dbLoadout["Override Default " .. type] and dbLoadout[type] or self.db.char.loadouts[instanceTypeValue][-1][type])
+                dropdown:SetDisabled(not dbLoadout["Override Default " .. type])
                 dropdown:SetCallback("OnValueChanged", function(widget, callback, key)
-                    dbEntry[type] = key
+                    dbLoadout[type] = key
                 end)
-                checkbox:SetValue(dbEntry["Override Default " .. type])
+                checkbox:SetValue(dbLoadout["Override Default " .. type])
                 checkbox:SetCallback("OnValueChanged", function(widget, callback, value)
-                    dbEntry["Override Default " .. type] = value
-                    dropdown:SetValue(dbEntry["Override Default " .. type] and dbEntry[type] or self.db.char.loadouts[instanceTypeValue][-1][type])
+                    dbLoadout["Override Default " .. type] = value
+                    dropdown:SetValue(dbLoadout["Override Default " .. type] and dbLoadout[type] or self.db.char.loadouts[instanceTypeValue][-1][type])
                     dropdown:SetDisabled(not value)
                 end)
             end
@@ -210,8 +214,10 @@ function addon:createOptionsConfig(widget, instanceTypeValue, instanceValue)
     end
 end
 
-
--- Create encounters/bosses treegroup
+---Creates configuration tree group for raid encounters
+---@param widget table The AceGUI widget to add elements to  
+---@param instanceTypeValue string The type of instance
+---@param instanceValue number The raid instance ID
 function addon:createRaidEncounterConfig(widget, instanceTypeValue, instanceValue)
     local encounterGroup = AceGUI:Create("TreeGroup")
     encounterGroup:SetFullHeight(true)
@@ -236,12 +242,13 @@ function addon:createRaidEncounterConfig(widget, instanceTypeValue, instanceValu
     encounterGroup:SetLayout("Flow")
     encounterGroup:EnableButtonTooltips(false)
     encounterGroup:SetCallback("OnGroupSelected", (function(widget, callback, encounterValue)
+        local dbLoadouts = self.db.char.loadouts
         local instanceEncounter = instanceValue .. " Encounter"
-        local specializationSet = self.db.char.loadouts[instanceEncounter][encounterValue].Specialization
-        local overrideSpecializationSet = self.db.char.loadouts[instanceEncounter][encounterValue]["Override Default Specialization"]
-        local overrideTalentSet = self.db.char.loadouts[instanceEncounter][encounterValue]["Override Default Talents"]
+        local specializationSet = dbLoadouts[instanceEncounter][encounterValue].Specialization
+        local overrideSpecializationSet = dbLoadouts[instanceEncounter][encounterValue]["Override Default Specialization"]
+        local overrideTalentSet = dbLoadouts[instanceEncounter][encounterValue]["Override Default Talents"]
         if not overrideSpecializationSet or not overrideTalentSet then
-            specializationSet = self.db.char.loadouts[instanceEncounter][-1].Specialization
+            specializationSet = dbLoadouts[instanceEncounter][-1].Specialization
         end
         if specializationSet ~= -1 then
             self:checkTalentManager(specializationSet)
@@ -254,6 +261,10 @@ function addon:createRaidEncounterConfig(widget, instanceTypeValue, instanceValu
     widget:AddChild(encounterGroup)
 end
 
+---Creates configuration tree group for dungeon instances
+---@param widget table The AceGUI widget to add elements to
+---@param instanceTypeValue string The type of instance 
+---@param tierValue number The dungeon tier ID
 function addon:createDungeonInstanceConfig(widget, instanceTypeValue, tierValue)
     local encounterGroup = AceGUI:Create("TreeGroup")
     encounterGroup:SetFullHeight(true)
@@ -278,11 +289,12 @@ function addon:createDungeonInstanceConfig(widget, instanceTypeValue, tierValue)
     encounterGroup:SetLayout("Flow")
     encounterGroup:EnableButtonTooltips(false)
     encounterGroup:SetCallback("OnGroupSelected", (function(widget, callback, instanceValue)
-        local specializationSet = self.db.char.loadouts[instanceTypeValue][instanceValue].Specialization
-        local overrideSpecializationSet = self.db.char.loadouts[instanceTypeValue][instanceValue]["Override Default Specialization"]
-        local overrideTalentSet = self.db.char.loadouts[instanceTypeValue][instanceValue]["Override Default Talents"]
+        local dbLoadouts = self.db.char.loadouts
+        local specializationSet = dbLoadouts[instanceTypeValue][instanceValue].Specialization
+        local overrideSpecializationSet = dbLoadouts[instanceTypeValue][instanceValue]["Override Default Specialization"]
+        local overrideTalentSet = dbLoadouts[instanceTypeValue][instanceValue]["Override Default Talents"]
         if not overrideSpecializationSet or not overrideTalentSet then
-            specializationSet = self.db.char.loadouts[instanceTypeValue][-1].Specialization
+            specializationSet = dbLoadouts[instanceTypeValue][-1].Specialization
         end
         if specializationSet ~= -1 then
             self:checkTalentManager(specializationSet)
@@ -294,7 +306,10 @@ function addon:createDungeonInstanceConfig(widget, instanceTypeValue, tierValue)
     encounterGroup:SelectByValue(self.ConfigView.encounter)
     widget:AddChild(encounterGroup)
 end
--- Create instance type treegroup
+
+---Creates configuration tree group for instances
+---@param frame table The AceGUI frame to add elements to
+---@param instanceTypeValue string The type of instance
 function addon:createInstanceConfig(frame, instanceTypeValue)
     local instanceGroup = AceGUI:Create("TreeGroup")
     instanceGroup:SetFullHeight(true)
@@ -329,11 +344,12 @@ function addon:createInstanceConfig(frame, instanceTypeValue)
         elseif instanceTypeValue == "Dungeon" then
             addon:createDungeonInstanceConfig(widget, instanceTypeValue, instanceValue)
         else
-            local specializationSet = self.db.char.loadouts[instanceTypeValue][instanceValue].Specialization
-            local overrideSpecializationSet = self.db.char.loadouts[instanceTypeValue][instanceValue]["Override Default Specialization"]
-            local overrideTalentSet = self.db.char.loadouts[instanceTypeValue][instanceValue]["Override Default Talents"]
+            local dbLoadouts = self.db.char.loadouts
+            local specializationSet = dbLoadouts[instanceTypeValue][instanceValue].Specialization
+            local overrideSpecializationSet = dbLoadouts[instanceTypeValue][instanceValue]["Override Default Specialization"]
+            local overrideTalentSet = dbLoadouts[instanceTypeValue][instanceValue]["Override Default Talents"]
             if not overrideSpecializationSet or not overrideTalentSet then
-                specializationSet = self.db.char.loadouts[instanceTypeValue][-1].Specialization
+                specializationSet = dbLoadouts[instanceTypeValue][-1].Specialization
             end
             if specializationSet ~= -1 then
                 self:checkTalentManager(specializationSet)
@@ -345,6 +361,8 @@ function addon:createInstanceConfig(frame, instanceTypeValue)
     frame:AddChild(instanceGroup)
 end
 
+---Creates the instance type tab group configuration
+---@param frame table The AceGUI frame to add elements to
 function addon:createInstanceTypeConfig(frame)
     local instanceTypeGroup = AceGUI:Create("TabGroup")
     instanceTypeGroup:SetFullHeight(true)
@@ -364,7 +382,7 @@ function addon:createInstanceTypeConfig(frame)
     frame:AddChild(instanceTypeGroup)
 end
 
--- core function that shows the configWindow
+---Opens the main configuration window
 function addon:openConfig()
     if not GetSpecialization() or GetSpecialization() == 5 then
         self:Print("No specialization found")
@@ -379,6 +397,7 @@ function addon:openConfig()
     else
         if self.frame then
             AceGUI:Release(self.frame)
+            self.frame = nil
         end
         self.frameType = "Config"
         frame = AceGUI:Create("Frame")
@@ -399,10 +418,11 @@ function addon:openConfig()
     self.frame = frame
 end
 
--- Calls this when using /il c or /il config
+---Toggles the configuration window open/closed
 function addon:toggleConfig()
     if addon.frame and addon.frameType == "Config" then
         AceGUI:Release(addon.frame)
+        addon.frame = nil
     else
         addon:openConfig()
     end

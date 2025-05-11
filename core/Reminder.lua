@@ -27,8 +27,13 @@ local isGarrison = {
     1159, -- Alliance Garrison lvl 3
 }
 
--- Creates the reminder GUI for Specializations
+---Creates the reminder GUI for Specializations
+---@param frame table The AceGUI frame to add elements to
+---@param instanceType string The instance type (e.g. "Dungeon", "Raid")  
+---@param instance number The instance ID
+---@return boolean True if specialization needs to be changed
 function addon:createSpecializationFrame(frame, instanceType, instance)
+    local dbLoadouts = self.db.char.loadouts
     local change = false
     local container = AceGUI:Create("InlineGroup")
     container:SetLayout("Flow")
@@ -40,10 +45,10 @@ function addon:createSpecializationFrame(frame, instanceType, instance)
     container:AddChild(header)
     if next(self.externalInfo.Specialization) then
         local currentSpec = GetSpecialization()
-        local specializationSet = self.db.char.loadouts[instanceType][instance].Specialization
-        local overrideSpecializationSet = self.db.char.loadouts[instanceType][instance]["Override Default Specialization"]
+        local specializationSet = dbLoadouts[instanceType][instance].Specialization
+        local overrideSpecializationSet = dbLoadouts[instanceType][instance]["Override Default Specialization"]
         if not overrideSpecializationSet then
-            specializationSet = self.db.char.loadouts[instanceType][-1].Specialization
+            specializationSet = dbLoadouts[instanceType][-1].Specialization
         end
         if specializationSet == -1 then
             local label = AceGUI:Create("Label")
@@ -62,9 +67,11 @@ function addon:createSpecializationFrame(frame, instanceType, instance)
                 C_SpecializationInfo.SetSpecialization(specializationSet)
                 addon:RegisterEvent("ACTIVE_PLAYER_SPECIALIZATION_CHANGED", function()
                     if specializationSet == GetSpecialization() then
-                        addon:checkIfIsTrackedInstance()
                         addon:UnregisterEvent("ACTIVE_PLAYER_SPECIALIZATION_CHANGED")
                         addon:UnregisterEvent("SPECIALIZATION_CHANGE_CAST_FAILED")
+                        C_Timer.After(0, function()
+                            addon:checkIfIsTrackedInstance()
+                        end)
                     end
                 end)
                 addon:RegisterEvent("SPECIALIZATION_CHANGE_CAST_FAILED", function()
@@ -94,8 +101,13 @@ function addon:createSpecializationFrame(frame, instanceType, instance)
     return change
 end
 
--- Creates the reminder GUI for Talents
+---Creates the reminder GUI for Talents
+---@param frame table The AceGUI frame to add elements to
+---@param instanceType string The instance type
+---@param instance number The instance ID 
+---@return boolean True if talents need to be changed
 function addon:createTalentsFrame(frame, instanceType, instance)
+    local dbLoadouts = self.db.char.loadouts
     local change = false
     local container = AceGUI:Create("InlineGroup")
     container:SetLayout("Flow")
@@ -106,15 +118,15 @@ function addon:createTalentsFrame(frame, instanceType, instance)
     header:SetRelativeWidth(0.5)
     container:AddChild(header)
     if next(self.externalInfo.Talents) then
-        local specializationSet = self.db.char.loadouts[instanceType][instance].Specialization
-        local overrideSpecializationSet = self.db.char.loadouts[instanceType][instance]["Override Default Specialization"]
-        local talentSet = self.db.char.loadouts[instanceType][instance].Talents
-        local overrideTalentSet = self.db.char.loadouts[instanceType][instance]["Override Default Talents"]
+        local specializationSet = dbLoadouts[instanceType][instance].Specialization
+        local overrideSpecializationSet = dbLoadouts[instanceType][instance]["Override Default Specialization"]
+        local talentSet = dbLoadouts[instanceType][instance].Talents
+        local overrideTalentSet = dbLoadouts[instanceType][instance]["Override Default Talents"]
         if not overrideSpecializationSet then
-            specializationSet = self.db.char.loadouts[instanceType][-1].Specialization
-            talentSet = self.db.char.loadouts[instanceType][-1].Talents
+            specializationSet = dbLoadouts[instanceType][-1].Specialization
+            talentSet = dbLoadouts[instanceType][-1].Talents
         elseif not overrideTalentSet then
-            talentSet = self.db.char.loadouts[instanceType][-1].Talents
+            talentSet = dbLoadouts[instanceType][-1].Talents
         end
 
         if talentSet == -1 then
@@ -238,8 +250,13 @@ function addon:createTalentsFrame(frame, instanceType, instance)
     return change
 end
 
--- Creates the reminder GUI for Gearsets
+---Creates the reminder GUI for Gearsets
+---@param frame table The AceGUI frame to add elements to
+---@param instanceType string The instance type
+---@param instance number The instance ID
+---@return boolean True if gearset needs to be changed
 function addon:createGearsetFrame(frame, instanceType, instance)
+    local dbLoadouts = self.db.char.loadouts
     local change = false
     local container = AceGUI:Create("InlineGroup")
     container:SetLayout("Flow")
@@ -250,10 +267,10 @@ function addon:createGearsetFrame(frame, instanceType, instance)
     header:SetRelativeWidth(0.5)
     container:AddChild(header)
     if next(self.externalInfo.Gearset) then
-        local gearSet = self.db.char.loadouts[instanceType][instance].Gearset
-        local overrideGearSet = self.db.char.loadouts[instanceType][instance]["Override Default Gearset"]
+        local gearSet = dbLoadouts[instanceType][instance].Gearset
+        local overrideGearSet = dbLoadouts[instanceType][instance]["Override Default Gearset"]
         if gearSet == -1 or not overrideGearSet then
-            gearSet = self.db.char.loadouts[instanceType][-1].Gearset
+            gearSet = dbLoadouts[instanceType][-1].Gearset
         end
         if gearSet == -1 then
             local label = AceGUI:Create("Label")
@@ -302,8 +319,13 @@ function addon:createGearsetFrame(frame, instanceType, instance)
     return change
 end
 
--- Creates the reminder GUI for Addons
+---Creates the reminder GUI for Addons
+---@param frame table The AceGUI frame to add elements to
+---@param instanceType string The instance type
+---@param instance number The instance ID
+---@return boolean True if addons need to be changed 
 function addon:createAddonsFrame(frame, instanceType, instance)
+    local dbLoadouts = self.db.char.loadouts
     local change = false
     local container = AceGUI:Create("InlineGroup")
     container:SetLayout("Flow")
@@ -314,10 +336,10 @@ function addon:createAddonsFrame(frame, instanceType, instance)
     header:SetRelativeWidth(0.5)
     container:AddChild(header)
     if next(self.externalInfo.Addons) then
-        local addonSet = self.db.char.loadouts[instanceType][instance].Addons
-        local overrideAddonSet = self.db.char.loadouts[instanceType][instance]["Override Default Gearset"]
+        local addonSet = dbLoadouts[instanceType][instance].Addons
+        local overrideAddonSet = dbLoadouts[instanceType][instance]["Override Default Gearset"]
         if addonSet == -1 or not overrideAddonSet then
-            addonSet = self.db.char.loadouts[instanceType][-1].Addons
+            addonSet = dbLoadouts[instanceType][-1].Addons
         end
         if addonSet == -1 then
             local label = AceGUI:Create("Label")
@@ -357,7 +379,10 @@ function addon:createAddonsFrame(frame, instanceType, instance)
     return change
 end
 
--- Creates the Options button in the reminder GUI
+---Creates the Options button in the reminder GUI
+---@param frame table The AceGUI frame to add elements to
+---@param instanceType string The instance type
+---@param instance number The instance ID
 function addon:createChangeOptionsButton(frame, instanceType, instance)
     local encounter = instance
     if strfind(instanceType, "Encounter") then
@@ -388,6 +413,7 @@ function addon:createChangeOptionsButton(frame, instanceType, instance)
     button:SetHeight(35)
     button:SetCallback("OnClick", function(widget, callback, mouseButton)
         AceGUI:Release(addon.frame)
+        addon.frame = nil
         addon.ConfigView.instanceType = instanceType
         addon.ConfigView.instance = instance
         addon.ConfigView.encounter = encounter
@@ -398,14 +424,25 @@ function addon:createChangeOptionsButton(frame, instanceType, instance)
     
 end
 
--- Main function to show the reminder window
+---Shows the reminder window for a specific instance
+---@param instanceType string The instance type
+---@param instance number The instance ID
 function addon:showLoadoutForInstance(instanceType, instance)
+    local dbLoadouts = self.db.char.loadouts
+    if not dbLoadouts[instanceType] or not dbLoadouts[instanceType][instance] then
+        if self.frame then
+            AceGUI:Release(self.frame)
+            self.frame = nil
+        end
+        return
+    end
     local frame = self.frame
     if self.frame and self.frameType == "Reminder" then
         self.frame:ReleaseChildren()
     else
         if self.frame then
             AceGUI:Release(self.frame)
+            self.frame = nil
         end
         self.frameType = "Reminder"
         frame = AceGUI:Create("Frame")
@@ -443,13 +480,18 @@ function addon:showLoadoutForInstance(instanceType, instance)
     self.frame = frame
 
     if not specializationChange and not talentsChange and not gearsetChange and not addonsChange then
-        AceGUI:Release(frame)
+        if self.frame then
+            AceGUI:Release(self.frame)
+            self.frame = nil
+        end
     end
 end
 
--- Checks if target is a tracked raid boss
--- If yes then show the reminder
+---Checks if target is a tracked raid boss
+---@param instanceID number The instance ID to check
+---@param encounterIDs table The encounter IDs to check against
 function addon:checkIfTrackedTarget(instanceID, encounterIDs)
+    local dbLoadouts = self.db.char.loadouts
     if not encounterIDs then
         return
     end
@@ -462,10 +504,10 @@ function addon:checkIfTrackedTarget(instanceID, encounterIDs)
                 if encounterInfo.npcIDs then
                     for _, bossID in ipairs(encounterInfo.npcIDs) do
                         if npcID == tostring(bossID) then
-                            local specializationSet = self.db.char.loadouts[instanceID .. " Encounter"][encounterInfo.encounterID].Specialization
-                            local overrideSpecializationSet = self.db.char.loadouts[instanceID .. " Encounter"][encounterInfo.encounterID]["Override Default Specialization"]
+                            local specializationSet = dbLoadouts[instanceID .. " Encounter"][encounterInfo.encounterID].Specialization
+                            local overrideSpecializationSet = dbLoadouts[instanceID .. " Encounter"][encounterInfo.encounterID]["Override Default Specialization"]
                             if not overrideSpecializationSet then
-                                specializationSet = self.db.char.loadouts[instanceID .. " Encounter"][-1].Specialization
+                                specializationSet = dbLoadouts[instanceID .. " Encounter"][-1].Specialization
                             end 
                             if specializationSet ~= -1 then
                                 self:checkTalentManager(specializationSet)
@@ -480,10 +522,9 @@ function addon:checkIfTrackedTarget(instanceID, encounterIDs)
     end
 end
 
--- Checks if instance is a tracked instance
--- If raid then track for raid bosses when out of combat
--- If yes then show the reminder
+---Checks if current instance is tracked and shows reminder if needed
 function addon:checkIfIsTrackedInstance()
+    local dbLoadouts = self.db.char.loadouts
     self:UnregisterEvent("PLAYER_TARGET_CHANGED")
     self:UnregisterEvent("PLAYER_REGEN_ENABLED")
     self:UnregisterEvent("PLAYER_REGEN_DISABLED")
@@ -495,12 +536,12 @@ function addon:checkIfIsTrackedInstance()
         encounter = -1
     elseif instanceType == "party" then
         instance = "Dungeon"
-        if self.ConvertIDToName[instanceID] and self.db.char.loadouts[instance][instanceID] then
+        if self.ConvertIDToName[instanceID] and dbLoadouts[instance][instanceID] then
             encounter = instanceID
         end
     elseif instanceType == "raid" then
         instance = instanceID .. " Encounter"
-        if self.ConvertIDToName[instanceID] and self.db.char.loadouts[instance] and self.db.char.loadouts[instance][-1] then
+        if self.ConvertIDToName[instanceID] and dbLoadouts[instance] and dbLoadouts[instance][-1] then
             encounter = -1
             for _, instanceInfo in ipairs(self.instanceGroups.Raid) do
                 if instanceInfo.instanceID == instanceID and instanceInfo.encounterIDs then
@@ -522,26 +563,26 @@ function addon:checkIfIsTrackedInstance()
         end
     elseif difficultyName == "Delves" then
         instance = "Delve"
-        if self.ConvertIDToName[instanceID] and self.db.char.loadouts[instance][instanceID] then
+        if self.ConvertIDToName[instanceID] and dbLoadouts[instance][instanceID] then
             encounter = instanceID
         end
     elseif instanceType == "arena" then
         instance = "Arena"
-        if self.ConvertIDToName[instanceID] and self.db.char.loadouts[instance][instanceID] then
+        if self.ConvertIDToName[instanceID] and dbLoadouts[instance][instanceID] then
             encounter = instanceID
         end
     elseif instanceType == "pvp" then
         instance = "Battleground"
-        if self.ConvertIDToName[instanceID] and self.db.char.loadouts[instance][instanceID] then
+        if self.ConvertIDToName[instanceID] and dbLoadouts[instance][instanceID] then
             encounter = instanceID
         end
     end
     if instance and encounter then
-        local specializationSet = self.db.char.loadouts[instance][encounter].Specialization
+        local specializationSet = dbLoadouts[instance][encounter].Specialization
         if not strfind(instance, "Encounter") then
-            local overrideSpecializationSet = self.db.char.loadouts[instance][encounter]["Override Default Specialization"]
+            local overrideSpecializationSet = dbLoadouts[instance][encounter]["Override Default Specialization"]
             if not overrideSpecializationSet then
-                specializationSet = self.db.char.loadouts[instance][-1].Specialization
+                specializationSet = dbLoadouts[instance][-1].Specialization
             end
         end
         if specializationSet ~= -1 then

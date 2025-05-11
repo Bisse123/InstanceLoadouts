@@ -42,7 +42,7 @@ addon.instanceGroups ={
     ["Open World"] = {},
 }
 
--- Populate with current season M+ Dungeons
+---Gets and populates current season Mythic+ dungeons
 function addon:getCurrentSeasonDungeons()
     local dungeonJournalIDs = self.db.global.journalIDs.Dungeon
     local dungeon = self.instanceGroups.Dungeon
@@ -67,7 +67,7 @@ function addon:getCurrentSeasonDungeons()
     tinsert(dungeon, {tierID = currentSeason, tierName = currentSeasonName, instanceIDs = instanceIDs})
 end
 
--- Populate with current season Raids
+---Gets and populates current season raids
 function addon:getCurrentSeasonRaids()
     local raidJournalIDs = self.db.global.journalIDs.Raid
     local raid = self.instanceGroups.Raid
@@ -103,7 +103,7 @@ function addon:getCurrentSeasonRaids()
     end
 end
 
--- Populate with current season Delves
+---Gets and populates current season delves
 function addon:getCurrentSeasonDelves()
     local instanceIDs = {
         2664, -- Fungal Folly
@@ -133,7 +133,7 @@ function addon:getCurrentSeasonDelves()
     end
 end
 
--- Populate with current season Arenas
+---Gets and populates current season arenas
 function addon:getCurrentSeasonArenas()
     local  instanceIDs = {
         572, -- Ruins of Lordaeron
@@ -166,7 +166,7 @@ function addon:getCurrentSeasonArenas()
 
 end
 
--- Populate with current season Battlegrounds
+---Gets and populates current season battlegrounds 
 function addon:getCurrentSeasonBattlegrounds()
     local battleground = self.instanceGroups.Battleground
     tinsert(battleground, {instanceID = -1, instanceName = "Default"})
@@ -176,12 +176,13 @@ function addon:getCurrentSeasonBattlegrounds()
     end
 end
 
--- Populate with current season Open World
+---Gets and populates current season open world zones
 function addon:getCurrentSeasonOpenWorld()
     local openWorld = self.instanceGroups["Open World"]
     tinsert(openWorld, {instanceID = -1, instanceName = "Default"})
 end
 
+---Gets current season instances for all content types
 function addon:getCurrentSeason()
     EJ_SelectTier(EJ_GetNumTiers())
     self:getCurrentSeasonDungeons()
