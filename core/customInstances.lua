@@ -8,6 +8,8 @@ local customGroupsConfigView = {
 
 local journalInstance
 
+---Adds a raid instance to the custom instances list
+---@param journalInstanceID number The journal instance ID of the raid to add
 function addon:addRaidInstance(journalInstanceID)
     local raidJournalIDs = self.db.global.journalIDs.Raid
     if not raidJournalIDs[journalInstanceID] then
@@ -25,6 +27,8 @@ function addon:addRaidInstance(journalInstanceID)
     self:getCustomEncounterJournalRaids()
 end
 
+---Adds a dungeon instance to the custom instances list
+---@param journalInstanceID number The journal instance ID of the dungeon to add
 function addon:addDungeonInstance(journalInstanceID)
     local dungeonJournalIDs = self.db.global.journalIDs.Dungeon
     local currentTier = EJ_GetCurrentTier()
@@ -37,6 +41,8 @@ function addon:addDungeonInstance(journalInstanceID)
     self:getCustomEncounterJournalDungeons()
 end
 
+---Removes a raid instance from the custom instances list
+---@param journalInstanceID number The journal instance ID of the raid to remove
 function addon:removeRaidInstance(journalInstanceID)
     local raidJournalIDs = self.db.global.journalIDs.Raid
     if raidJournalIDs[journalInstanceID] then
@@ -51,6 +57,8 @@ function addon:removeRaidInstance(journalInstanceID)
     end
 end
 
+---Removes a dungeon instance from the custom instances list
+---@param journalInstanceID number The journal instance ID of the dungeon to remove 
 function addon:removeDungeonInstance(journalInstanceID)
     local dungeonJournalIDs = self.db.global.journalIDs.Dungeon
     local currentTier = EJ_GetCurrentTier()
@@ -60,6 +68,8 @@ function addon:removeDungeonInstance(journalInstanceID)
     end
 end
 
+---Creates the add instance button in the Encounter Journal
+---@return table The created button frame
 function addon:CreateAddInstanceButton()
     local addButton = CreateFrame("Button", nil, EncounterJournal, "UIPanelButtonTemplate")
     addButton:SetHeight(40)
@@ -103,7 +113,9 @@ function addon:CreateAddInstanceButton()
     return addButton
 end
 
-
+---Creates the remove instance button in the Encounter Journal
+---@param addButton table The add button frame to position relative to
+---@return table The created button frame
 function addon:CreateRemoveInstanceButton(addButton)
     local removeButton = CreateFrame("Button", nil, EncounterJournal, "UIPanelButtonTemplate")
     removeButton:SetHeight(40)
@@ -147,6 +159,7 @@ function addon:CreateRemoveInstanceButton(addButton)
     return removeButton
 end
 
+---Creates both add and remove instance buttons in the Encounter Journal
 function addon:CreateInstanceButtons()
     local addButton = self:CreateAddInstanceButton()
     -- local removeButton = self:CreateRemoveInstanceButton(addButton)
@@ -208,6 +221,7 @@ function addon:CreateInstanceButtons()
     end)
 end
 
+---Gets and populates custom dungeon instances from the journal
 function addon:getCustomEncounterJournalDungeons()
     local dungeonJournalIDs = self.db.global.journalIDs.Dungeon
     local dungeon = self.instanceGroups.Dungeon
@@ -239,6 +253,7 @@ function addon:getCustomEncounterJournalDungeons()
     end
 end
 
+---Gets and populates custom raid instances from the journal
 function addon:getCustomEncounterJournalRaids()
     local raidJournalIDs = self.db.global.journalIDs.Raid
     local raid = self.instanceGroups.Raid
@@ -268,11 +283,16 @@ function addon:getCustomEncounterJournalRaids()
     end
 end
 
+---Gets and populates all custom instances from the journal
 function addon:getCustomEncounterJournals()
     self:getCustomEncounterJournalDungeons()
     self:getCustomEncounterJournalRaids()
 end
 
+---Creates encounter config options for custom groups
+---@param widget table The AceGUI widget to add elements to
+---@param instanceTypeValue string The type of instance
+---@param journalInstanceID number The journal instance ID
 function addon:createCustomGroupsEncounterConfig(widget, instanceTypeValue, journalInstanceID)
     local journalEncounterIDs = self.db.global.journalIDs[instanceTypeValue][journalInstanceID]
     local container = AceGUI:Create("InlineGroup")
@@ -312,6 +332,11 @@ function addon:createCustomGroupsEncounterConfig(widget, instanceTypeValue, jour
     widget:AddChild(container)
 end
 
+---Creates instance config options for custom groups
+---@param scroll table The AceGUI scroll frame to add elements to
+---@param instanceTypeValue string The type of instance
+---@param journalInstanceIDs table The journal instance IDs to create configs for
+---@param tierID number|nil The optional tier ID for dungeons
 function addon:createCustomGroupsInstanceConfig(scroll, instanceTypeValue, journalInstanceIDs, tierID)
     local container
     if instanceTypeValue == "Dungeon" then
@@ -369,6 +394,9 @@ function addon:createCustomGroupsInstanceConfig(scroll, instanceTypeValue, journ
     end
 end
 
+---Creates tier config options for custom groups
+---@param scroll table The AceGUI scroll frame to add elements to
+---@param instanceTypeValue string The type of instance
 function addon:createCustomGroupsTierConfig(scroll, instanceTypeValue)
     local tierIDs = self.db.global.journalIDs[instanceTypeValue]
     for tierID, tierInfo in pairs(tierIDs) do
@@ -407,6 +435,8 @@ function addon:createCustomGroupsTierConfig(scroll, instanceTypeValue)
     end
 end
 
+---Creates the tab group for custom groups configuration
+---@param frame table The AceGUI frame to add elements to
 function addon:createCustomGroupsTabGroup(frame)
     local customGroupsTabs = AceGUI:Create("TabGroup")
     customGroupsTabs:SetFullHeight(true)
@@ -441,6 +471,7 @@ function addon:createCustomGroupsTabGroup(frame)
     frame:AddChild(customGroupsTabs)
 end
 
+---Opens the custom instances configuration window
 function addon:openCustomInstances()
     local frame = self.frame
     if self.frame and self.frameType == "Custom" then
@@ -466,6 +497,7 @@ function addon:openCustomInstances()
     self.frame = frame
 end
 
+---Toggles the custom instances UI open/closed
 function addon:toggleCustomInstanceUI()
     if addon.frame and addon.frameType == "Custom" then
         AceGUI:Release(addon.frame)

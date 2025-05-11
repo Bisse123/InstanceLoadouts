@@ -140,11 +140,13 @@ local function createChangelog()
     return changelog
 end
 
+---Shows the changelog window
 function addon:showChangelog()
     self.frameType = "Changelog"
     AceConfigDialog:Open(addonName .. "-Changelog")
 end
 
+---Toggles the changelog window open/closed
 function addon:toggleChangelog()
     if updatedChangelog then
         AceGUI:Release(addon.frame)
@@ -267,11 +269,13 @@ local function createBlizzOptions()
     return aboutTable
 end
 
+---Shows general addon options/information
 function addon:showOptions()
     self.frameType = "Options"
     AceConfigDialog:Open(addonName)
 end
 
+---Toggles the options window open/closed 
 function addon:toggleOptions()
     if AceConfigDialog.OpenFrames[addonName] then
         AceConfigDialog:Close(addonName)
@@ -294,6 +298,9 @@ local optionFunctions = {
     ["Export"] = addon.toggleExport,
 }
 
+---Executes the specified options function
+---@param info table The options info table
+---@param button string The button pressed
 function addon:executeOptionsFunction(info, button)
     if AceConfigDialog.OpenFrames[addonName] then
         AceConfigDialog:Close(addonName)
@@ -444,6 +451,8 @@ local function createOptionstable()
     return optionsTable
 end
 
+---Creates an "Open Options" button and container for the given frame
+---@param frame table The AceGUI frame to add the button to
 function addon:createOptionsButton(frame)
     local container = AceGUI:Create("SimpleGroup")
     container:SetLayout("Flow")
@@ -519,6 +528,8 @@ end
 --     }
 -- }
 
+---Generates default options for the global database
+---@return table The global defaults table
 function addon:generateGlobalDefaults()
     local global = {
         ["autoShowChangelog"] = true,
@@ -527,6 +538,8 @@ function addon:generateGlobalDefaults()
     return global
 end
 
+---Generates default options for the character database
+---@return table The character defaults table
 function addon:generateCharDefaults()
     local char = {
             ["loadouts"] = {}
@@ -613,6 +626,8 @@ function addon:generateCharDefaults()
     return char
 end
 
+---Generates all default database options
+---@return table The complete defaults table
 function addon:generateDefaults()
     self.ConvertIDToName = {}
     local db = {
@@ -627,6 +642,7 @@ end
 -- Battlegrounds
 -- Detect external addons
 -- Populate ExternalInfo with data
+---Initializes core addon data
 function addon:InitData()
     self:getCurrentSeason()
     self:getCustomEncounterJournals()
@@ -687,7 +703,7 @@ function addon:InitData()
     end)
 end
 
--- Initializing function
+---Called when the addon is initialized
 function addon:OnInitialize()
     local globalDefaults = {
         ["global"] = {

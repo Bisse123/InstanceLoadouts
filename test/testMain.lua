@@ -2,9 +2,9 @@ local addonName, addon = ...
 
 if WoWUnit then
     local WoWUnit = WoWUnit
-    local Tests = WoWUnit("IL Tests")
+    local Main = WoWUnit("IL Main")
 
-    function Tests:CheckReminder()
+    function Main:CheckReminder()
         local status, count = addon.testData.Reminder:Status()
         WoWUnit.IsTrue(status <= 2)
         if status <= 2 then

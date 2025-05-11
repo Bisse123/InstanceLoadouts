@@ -8,6 +8,10 @@ local LibDeflate = LibStub("LibDeflate")
 local importQueue = {}
 
 local missingManagerFrame
+
+---Shows missing manager warnings if required managers aren't present
+---@param managerType string The type of manager to check for ("Addon" or "Talent")
+---@return boolean|nil True if managers are missing, nil otherwise
 function addon:showMissingManagers(managerType)
     if not managerType then
         return
@@ -115,6 +119,11 @@ function addon:showMissingManagers(managerType)
     return true
 end
 
+---Validates an import string format
+---@param payload string The import string to validate
+---@return string|nil importType The type of import if valid
+---@return table|nil loadouts The loadouts table if valid
+---@return table|nil loadoutInfo Additional import info if valid
 function addon:isValidImportString(payload)
 	local decoded = LibDeflate:DecodeForPrint(payload)
     if not decoded then
@@ -140,6 +149,10 @@ function addon:isValidImportString(payload)
     return importType, loadouts, loadoutInfo
 end
 
+---Checks for missing addons in an addon set
+---@param addonSet table The addon set to check
+---@param ProtectedAddons table Protected addons to check
+---@return table|nil Table of missing addon names or nil if none missing
 function addon:checkMissingAddonsInAddonSet(addonSet, ProtectedAddons)
     local missingAddons = {}
     local isMissingAddon = false
@@ -162,6 +175,11 @@ function addon:checkMissingAddonsInAddonSet(addonSet, ProtectedAddons)
     return isMissingAddon and missingAddons or nil
 end
 
+---Updates loadout references after renaming
+---@param loadouts table The loadouts to update
+---@param oldName string The old loadout name
+---@param newName string The new loadout name
+---@return table The updated loadouts
 function addon:updateLoadoutName(loadouts, oldName, newName)
     for _, encounters in pairs(loadouts) do
         for _, configTable in pairs(encounters) do
@@ -176,6 +194,8 @@ function addon:updateLoadoutName(loadouts, oldName, newName)
     return loadouts
 end
 
+---Imports journal IDs from import data
+---@param journalIDs table The journal IDs to import
 function addon:importJournalIDs(journalIDs)
     local journalIDsDB = self.db.global.journalIDs
     for instanceType, journalInstanceIDs in pairs(journalIDs) do
@@ -200,6 +220,10 @@ function addon:importJournalIDs(journalIDs)
     self:getCustomEncounterJournals()
 end
 
+---Imports addon loadouts
+---@param loadouts table The loadouts to import
+---@param loadoutInfo table Additional import info
+---@param partialImport boolean Whether this is a partial import
 function addon:importAddons(loadouts, loadoutInfo, partialImport)
     local addonNameToSetID = {}
     self.manager:setProtectedAddons(loadoutInfo.ProtectedAddons)
@@ -249,6 +273,10 @@ function addon:importAddons(loadouts, loadoutInfo, partialImport)
     self:checkAddonManager()
 end
 
+---Shows the addon import UI
+---@param loadouts table The loadouts to import
+---@param loadoutInfo table Additional import info
+---@param partialImport boolean Whether this is a partial import
 function addon:showImportAddons(loadouts, loadoutInfo, partialImport)
     local frame = AceGUI:Create("Frame")
     frame:SetCallback("OnClose", function(widget)
@@ -361,6 +389,10 @@ function addon:showImportAddons(loadouts, loadoutInfo, partialImport)
     end
 end
 
+---Imports talent loadouts
+---@param loadouts table The loadouts to import
+---@param loadoutInfo table Additional import info
+---@param partialImport boolean Whether this is a partial import
 function addon:importTalents(loadouts, loadoutInfo, partialImport)
     local talentNameToLoadoutID = {}
     for name, talentInfo in pairs(loadoutInfo.Talents) do
@@ -420,6 +452,10 @@ function addon:importTalents(loadouts, loadoutInfo, partialImport)
     self:checkTalentManager()
 end
 
+---Shows the talent import UI
+---@param loadouts table The loadouts to import
+---@param loadoutInfo table Additional import info
+---@param partialImport boolean Whether this is a partial import
 function addon:showImportTalents(loadouts, loadoutInfo, partialImport)
     local frame = AceGUI:Create("Frame")
     frame:SetCallback("OnClose", function(widget)
@@ -508,6 +544,7 @@ local importFunctions = {
     ["Talent"] = addon.showImportTalents,
 }
 
+---Processes the next queued import
 function addon:getNextImport()
     if next(importQueue) then
         local nextImport = tremove(importQueue, (next(importQueue)))
@@ -519,6 +556,7 @@ function addon:getNextImport()
     end
 end
 
+---Shows the import frame UI
 function addon:ShowImportFrame()
     local frame = self.frame
     if self.frame and self.frameType == "Import" then
@@ -656,6 +694,7 @@ function addon:ShowImportFrame()
     self.frame = frame
 end
 
+---Toggles the import UI open/closed
 function addon:toggleImport()
     if addon.frame and addon.frameType == "Import" then
         AceGUI:Release(addon.frame)
@@ -665,6 +704,11 @@ function addon:toggleImport()
     end
 end
 
+---Creates an export string
+---@param exportType string The type of export
+---@param loadouts table The loadouts to export
+---@param loadoutInfo table Additional export info
+---@return string The encoded export string
 function addon:export(exportType, loadouts, loadoutInfo)
     local data = {exportType, loadouts, loadoutInfo}
     local serialized = LibSerialize:Serialize(data)
@@ -673,6 +717,8 @@ function addon:export(exportType, loadouts, loadoutInfo)
     return encoded
 end
 
+---Exports both addon and talent loadouts
+---@return string The export string
 function addon:exportAddonsAndTalents()
     if self.manager:getAddonManager() == "BetterAddonList" then
         return
@@ -743,6 +789,8 @@ function addon:exportAddonsAndTalents()
     return self:export("Addon and Talent", loadouts, loadoutInfo)
 end
 
+---Exports addon loadouts only
+---@return string The export string 
 function addon:exportAddons()
     if self.manager:getAddonManager() == "BetterAddonList" then
         return
@@ -790,6 +838,8 @@ function addon:exportAddons()
     return self:export("Addon", loadouts, loadoutInfo)
 end
 
+---Exports talent loadouts only
+---@return string The export string
 function addon:ExportTalents()
     if not self.manager:getTalentManager() then
         return
@@ -844,6 +894,8 @@ local exportFunctions = {
     ["Addon"] = addon.exportAddons,
     ["Talent"] = addon.ExportTalents,
 }
+
+---Shows the export frame UI
 function addon:ShowExportFrame()
     local frame = self.frame
     if self.frame and self.frameType == "Export" then
@@ -935,6 +987,8 @@ function addon:ShowExportFrame()
     end)
     self.frame = frame
 end
+
+---Toggles the export UI open/closed
 function addon:toggleExport()
     if addon.frame and addon.frameType == "Export" then
         AceGUI:Release(addon.frame)
