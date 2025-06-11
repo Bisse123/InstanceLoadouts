@@ -51,11 +51,8 @@ local function createChangelog()
                 fontSize = "large",
             },
             ["version" .. versionCount()] = 
-                versionChanges("Version 2.1.5", {
-                    "Chrome King Gallywix npcID fixed",
-            }),
-            ["version" .. versionCount()] = 
                 versionChanges("Version 2.1.4", {
+                    "Chrome King Gallywix npcID fixed",
                     "Export frame fix",
                     "Fixed issue with wrongfully telling to swap talents after swapping specialization",
                     "Added safety check in reminder logic",
