@@ -12,7 +12,7 @@ addon.raidBossIDs = {
         [3013] = {230583}, -- Sprocketmonger Lockenstock
         [3014] = {228458}, -- One-Armed Bandit
         [3015] = {229953}, -- Mug'zee
-        [3016] = {237194}, -- Chrome King Gallywix
+        [3016] = {231075}, -- Chrome King Gallywix
     },
 }
 

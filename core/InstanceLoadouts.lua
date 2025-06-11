@@ -51,89 +51,93 @@ local function createChangelog()
                 fontSize = "large",
             },
             ["version" .. versionCount()] = 
+                versionChanges("Version 2.1.5", {
+                    "Chrome King Gallywix npcID fixed",
+            }),
+            ["version" .. versionCount()] = 
                 versionChanges("Version 2.1.4", {
-                "Export frame fix",
-                "Fixed issue with wrongfully telling to swap talents after swapping specialization",
-                "Added safety check in reminder logic",
+                    "Export frame fix",
+                    "Fixed issue with wrongfully telling to swap talents after swapping specialization",
+                    "Added safety check in reminder logic",
             }),
             ["version" .. versionCount()] = 
                 versionChanges("Version 2.1.3", {
-                "More frames fixes",
+                    "More frames fixes",
             }),
             ["version" .. versionCount()] = 
                 versionChanges("Version 2.1.2", {
-                "Changes in the Blizzard Options panel",
-                "Renamed Custom Groups to Custom Instances",
-                "Fixed frames repositioning after certain actions",
-                "Fixed frames not closing properly",
+                    "Changes in the Blizzard Options panel",
+                    "Renamed Custom Groups to Custom Instances",
+                    "Fixed frames repositioning after certain actions",
+                    "Fixed frames not closing properly",
             }),
             ["version" .. versionCount()] = 
                 versionChanges("Version 2.1.1", {
-                "Added Garrison IDs to make them work as Open World",
+                    "Added Garrison IDs to make them work as Open World",
             }),
             ["version" .. versionCount()] = 
                 versionChanges("Version 2.1.0", {
-                "Added support for Simple Addon Manager. Does not currently support the import/export feature.",
+                    "Added support for Simple Addon Manager. Does not currently support the import/export feature.",
             }),
             ["version" .. versionCount()] = 
                 versionChanges("Version 2.0.2", {
-                "Fixed issue when entering a raid that is not being tracked",
-                "Fixed issue caused when saving, deleting or changing gearsets",
-                "Fixed a bug which occured if a player removed an encounter from custom groups while being inside the instance of that encounter",
-                "Changed name of button in reminder from Options to Loadouts Config",
-                "Fixed Loadouts Config button in reminder for dungeons and raids",
+                    "Fixed issue when entering a raid that is not being tracked",
+                    "Fixed issue caused when saving, deleting or changing gearsets",
+                    "Fixed a bug which occured if a player removed an encounter from custom groups while being inside the instance of that encounter",
+                    "Changed name of button in reminder from Options to Loadouts Config",
+                    "Fixed Loadouts Config button in reminder for dungeons and raids",
             }),
             ["version" .. versionCount()] = 
                 versionChanges("Version 2.0.1", {
-                "Fixed Raid Loadouts",
+                    "Fixed Raid Loadouts",
             }),
             ["version" .. versionCount()] = 
                 versionChanges("Version 2.0.0", {
-                "NEW FEATURE: Custom groups -> Add Loadouts for any Dungeon or Raid from the Encounter Journal",
-                "NOTE: When adding a custom Raid remember to input npcIDs for each boss if you wish to get reminded to swap loadouts for that boss",
-                "Added button in Encounter Journal to add custom instances to loadouts",
-                "Now uses IDs instead of names for tracking, this means it now works for non english users",
-                "Converted database from names to IDs",
-                "Default instances will always be current season (Not considered custom groups so cannot be removed)",
-                "Created Custom Groups Config window to remove custom instances from loadouts",
-                "Changed the UI to be better suited for custom groups",
-                "Dungeon groups will all share the same Default Loadout",
-                "Duplicate Dungeons will share the same Loadout",
-                "Export now includes custom groups",
-                "Import now includes custom groups and will use appropiate Locale names",
+                    "NEW FEATURE: Custom groups -> Add Loadouts for any Dungeon or Raid from the Encounter Journal",
+                    "NOTE: When adding a custom Raid remember to input npcIDs for each boss if you wish to get reminded to swap loadouts for that boss",
+                    "Added button in Encounter Journal to add custom instances to loadouts",
+                    "Now uses IDs instead of names for tracking, this means it now works for non english users",
+                    "Converted database from names to IDs",
+                    "Default instances will always be current season (Not considered custom groups so cannot be removed)",
+                    "Created Custom Groups Config window to remove custom instances from loadouts",
+                    "Changed the UI to be better suited for custom groups",
+                    "Dungeon groups will all share the same Default Loadout",
+                    "Duplicate Dungeons will share the same Loadout",
+                    "Export now includes custom groups",
+                    "Import now includes custom groups and will use appropiate Locale names",
             }),
             ["version" .. versionCount()] = 
                 versionChanges("Version 1.0.1", {
-                "Added Better Addon List as an Addon Manager. Does not currently support the import/export feature.",
-                "Swapping between Addon Managers will reset the addon loadouts each time",
+                    "Added Better Addon List as an Addon Manager. Does not currently support the import/export feature.",
+                    "Swapping between Addon Managers will reset the addon loadouts each time",
             }),
             ["version" .. versionCount()] = 
                 versionChanges("Version 1.0.0", {
-                "Added option to automatically show changelog on new update (Enabled by default)",
-                "Added feature to import Addons/Talents loadouts (/il import)",
-                "Added feature to Export Addons/Talents loadouts (/il export)",
-                "Importing/Exporting addon loadouts requires an Addon manager",
-                "Importing/Exporting talents loadouts requires a Talent manager",
-                "Restructure of codebase",
+                    "Added option to automatically show changelog on new update (Enabled by default)",
+                    "Added feature to import Addons/Talents loadouts (/il import)",
+                    "Added feature to Export Addons/Talents loadouts (/il export)",
+                    "Importing/Exporting addon loadouts requires an Addon manager",
+                    "Importing/Exporting talents loadouts requires a Talent manager",
+                    "Restructure of codebase",
             }),
             ["version" .. versionCount()] = 
                 versionChanges("Version 0.1.0", {
-                "Added Changelog window (/il log)",
-                "Added loadouts for Delves",
-                "Added loadouts for Arenas",
-                "Added loadouts for Battlegrounds",
-                "Added scroll container to options config window",
-                "Added scroll container to reminder window",
-                "Fixed bug with Operation: Mechagon - Workshop not showing loadout when entering dungeon",
-                "Ensured that only one GUI element can be open at a time",
+                    "Added Changelog window (/il log)",
+                    "Added loadouts for Delves",
+                    "Added loadouts for Arenas",
+                    "Added loadouts for Battlegrounds",
+                    "Added scroll container to options config window",
+                    "Added scroll container to reminder window",
+                    "Fixed bug with Operation: Mechagon - Workshop not showing loadout when entering dungeon",
+                    "Ensured that only one GUI element can be open at a time",
             }),
             ["version" .. versionCount()] = 
                 versionChanges("Version 0.0.1", {
-                "Fixed a bug when turning off override spec but still having override talents on where it would choose the talent override instead of the default",
+                    "Fixed a bug when turning off override spec but still having override talents on where it would choose the talent override instead of the default",
             }),
             ["version" .. versionCount()] = 
                 versionChanges("Version 0.0.0", {
-                "Initial release",
+                    "Initial release",
             }),
         },
     }
