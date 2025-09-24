@@ -1,9 +1,9 @@
-## Interface: 110105
-## Version: 2.1.4
+## Interface: 110200
+## Version: 2.1.5
 ## Title: Instance Loadouts
 ## Notes: Reminds you to change specialization, talents, gear set and addons
 ## Author: Bisse
-## X-Patch: The War Within 11.1.5
+## X-Patch: The War Within 11.2
 ## X-Curse-Project-ID: 1235057
 ## X-Wago-ID: 4N2m0QGL
 ## SavedVariables: InstanceLoadoutsDB
