@@ -14,6 +14,16 @@ addon.raidBossIDs = {
         [3015] = {229953}, -- Mug'zee
         [3016] = {231075}, -- Chrome King Gallywix
     },
+    [2810] = { -- Manaforge Omega 
+        [3129] = {233814}, -- Plexus Sentinel
+        [3131] = {233815}, -- Loom'ithar
+        [3130] = {233816}, -- Soulbinder Naazindhri
+        [3132] = {233817}, -- Forgeweaver Araz
+        [3122] = {237661, 237662, 237660}, -- The Soul Hunters
+        [3133] = {237861}, -- Fractillus
+        [3134] = {237763, 233823, 244170}, -- Nexus-King Salhadaar
+        [3135] = {241517}, -- Dimensius, the All-Devouring
+    }
 }
 
 addon.defaultJournalIDs = {
@@ -109,7 +119,9 @@ function addon:getCurrentSeasonDelves()
         2690, -- The Underkeep
         2815, -- Excavation Site 9
         2826, -- Sidestreet Sluice
-        2831, -- Demolition Dome TWW Season 2
+        -- 2831, -- Demolition Dome TWW Season 2
+        2803, -- Archival Assault
+        2951, -- Voidrazor Sanctuary TWW Season 3
     }
 
     local delve = self.instanceGroups.Delve
@@ -141,7 +153,6 @@ function addon:getCurrentSeasonArenas()
         2547, -- Enigma Crucible
         2563, -- Nokhudon Proving Grounds
         2759, -- Cage of Carnage
-
     }
 
     local arena = self.instanceGroups.Arena

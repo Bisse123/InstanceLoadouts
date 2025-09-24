@@ -53,6 +53,8 @@ local function createChangelog()
             ["version" .. versionCount()] = 
                 versionChanges("Version 2.1.5", {
                     "Fixed configs updating on deleted talent loadouts",
+                    "Added Manaforge Omega NPC IDs",
+                    "Added Season 3 Delves",
             }),
             ["version" .. versionCount()] = 
                 versionChanges("Version 2.1.4", {
