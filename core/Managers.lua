@@ -432,9 +432,14 @@ function addon:populateExternalInfo()
     self:RegisterEvent("TRAIT_CONFIG_DELETED", function(event, configID)
         local db = addon.db.char.loadouts
         for instanceType, encounters in pairs(db) do
-            for _, encounterID in pairs(encounters) do
+            for encounterID, _ in pairs(encounters) do
                 if db[instanceType][encounterID].Talents == configID then
+                    local encounter = self.ConvertIDToName[encounterID] or encounterID
+                    if configID ~= -1 then
+                        self:Print(string.format("Talents deleted, reset %s %s", instanceType, encounter))
+                    end
                     db[instanceType][encounterID].Talents = -1
+                    db[instanceType][encounterID]["Override Default Talents"] = false
                 end
             end
         end

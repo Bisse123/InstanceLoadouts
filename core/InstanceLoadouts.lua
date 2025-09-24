@@ -51,6 +51,10 @@ local function createChangelog()
                 fontSize = "large",
             },
             ["version" .. versionCount()] = 
+                versionChanges("Version 2.1.5", {
+                    "Fixed configs updating on deleted talent loadouts",
+            }),
+            ["version" .. versionCount()] = 
                 versionChanges("Version 2.1.4", {
                     "Chrome King Gallywix npcID fixed",
                     "Export frame fix",
