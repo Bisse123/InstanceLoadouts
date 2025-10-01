@@ -481,7 +481,7 @@ function addon:checkIfTrackedTarget(instanceID, encounterIDs)
         return
     end
     local guid = UnitGUID("target")
-    if guid then
+    if guid and not UnitIsDead("target") then
         local unitType = strsplit("-", guid)
         if unitType == "Creature" or unitType == "Vehicle" then
             local _, _, _, _, _, npcID = strsplit("-", guid)

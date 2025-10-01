@@ -55,6 +55,7 @@ local function createChangelog()
                     "Fixed configs updating on deleted talent loadouts",
                     "Added Manaforge Omega NPC IDs",
                     "Added Season 3 Delves",
+                    "Loadout reminder now only appears when targeting living NPCs"
             }),
             ["version" .. versionCount()] = 
                 versionChanges("Version 2.1.4", {
