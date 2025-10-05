@@ -472,6 +472,27 @@ function addon:showLoadoutForInstance(instanceType, instance)
     end
 end
 
+--Checks the current unit if within target timeout to avoid multiple popups
+---@param unit string The unit to check (e.g. "target")
+---@return boolean True if within timeout
+function addon:checkUnitTimeout(unit)
+    local guid = UnitGUID(unit)
+    if not guid then return false end
+    
+    local timeout = self.db.global.targetTimeout
+    local currentTime = GetTime()
+    if not self.lastTargetTime then
+        self.lastTargetTime = {}
+    end
+    
+    if self.lastTargetTime[guid] and (currentTime - self.lastTargetTime[guid]) < timeout then
+        return true
+    end
+    
+    self.lastTargetTime[guid] = currentTime
+    return false
+end
+
 ---Checks if target is a tracked raid boss
 ---@param instanceID number The instance ID to check
 ---@param encounterIDs table The encounter IDs to check against
@@ -482,6 +503,8 @@ function addon:checkIfTrackedTarget(instanceID, encounterIDs)
     end
     local guid = UnitGUID("target")
     if guid and not UnitIsDead("target") then
+        if self:checkUnitTimeout("target") then return end
+
         local unitType = strsplit("-", guid)
         if unitType == "Creature" or unitType == "Vehicle" then
             local _, _, _, _, _, npcID = strsplit("-", guid)

@@ -52,10 +52,11 @@ local function createChangelog()
             },
             ["version" .. versionCount()] = 
                 versionChanges("Version 2.1.5", {
+                    "Added a timeout on reminders showing again for the same targeted NPC (default with no timeout)",
                     "Fixed configs updating on deleted talent loadouts",
                     "Added Manaforge Omega NPC IDs",
                     "Added Season 3 Delves",
-                    "Loadout reminder now only appears when targeting living NPCs"
+                    "Loadout reminder now only appears when targeting living NPCs",
             }),
             ["version" .. versionCount()] = 
                 versionChanges("Version 2.1.4", {
@@ -454,6 +455,29 @@ local function createOptionstable()
                 func = "executeOptionsFunction",
                 guiHidden = true,
             },
+            ["space" .. nextSpace] = newSpace(),
+            ExtraOptionsHeader = {
+                order = orderCount(),
+                name = "Extra Options",
+                type = "description",
+                fontSize = "large",
+            },
+            targetTimeout = {
+                order = orderCount(),
+                name = "Target timeout (seconds)",
+                type = "range",
+                desc = "Time in seconds before loadout reminder can show again for the same target",
+                min = 0,
+                max = 120,
+                step = 5,
+                width = 1.5,
+                set = function (info, val)
+                    addon.db.global.targetTimeout = val
+                end,
+                get = function(info)
+                    return addon.db.global.targetTimeout or 0
+                end,
+            },
         }
     }
     return optionsTable
@@ -541,6 +565,7 @@ end
 function addon:generateGlobalDefaults()
     local global = {
         ["autoShowChangelog"] = true,
+        ["targetTimeout"] = 0,
         ["journalIDs"] = CopyTable(self.defaultJournalIDs),
     }
     return global
@@ -716,6 +741,7 @@ function addon:OnInitialize()
     local globalDefaults = {
         ["global"] = {
             ["autoShowChangelog"] = true,
+            ["targetTimeout"] = 20,
             ["journalIDs"] = {
                 ["Dungeon"] = {},
                 ["Raid"] = {},
