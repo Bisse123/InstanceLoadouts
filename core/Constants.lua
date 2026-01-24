@@ -52,7 +52,7 @@ function addon:getCurrentSeasonDungeons()
     local instanceIDs = {{instanceID = -1, instanceName = "Default"}}
     for instanceIdx = 1, 99 do
         local journalInstanceID, instanceName, _, _, _, _, _, _, _, _, instanceID = EJ_GetInstanceByIndex(instanceIdx, false)
-        if not journalInstanceID then
+        if not journalInstanceID or instanceName == "Keystone Dungeons" then
             break
         end
         self.defaultJournalIDs.Dungeon[currentSeason][journalInstanceID] = true
@@ -135,7 +135,7 @@ end
 
 ---Gets and populates current season arenas
 function addon:getCurrentSeasonArenas()
-    local  instanceIDs = {
+    local instanceIDs = {
         572, -- Ruins of Lordaeron
         617, -- Dalaran Sewers
         618, -- The Ring of Valor
@@ -170,8 +170,10 @@ function addon:getCurrentSeasonBattlegrounds()
     local battleground = self.instanceGroups.Battleground
     tinsert(battleground, {instanceID = -1, instanceName = "Default"})
     for idx = 1, GetNumBattlegroundTypes() do
-        local instanceName, _, _, _, _, _, instanceID = GetBattlegroundInfo(idx)
-        tinsert(battleground, {instanceID = instanceID, instanceName = instanceName})
+        local bgInfo = C_PvP.GetBattlegroundInfo(idx)
+        if bgInfo then
+            tinsert(battleground, {instanceID = bgInfo.mapID, instanceName = bgInfo.name})
+        end
     end
 end
 

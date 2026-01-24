@@ -1,17 +1,15 @@
 local addonName, addon = ...
 
-local AceGUI = LibStub("AceGUI-3.0")
+local AF = _G.AbstractFramework
 
 local LibSerialize = LibStub("LibSerialize")
 local LibDeflate = LibStub("LibDeflate")
 
 local importQueue = {}
 
-local missingManagerFrame
-
 ---Shows missing manager warnings if required managers aren't present
 ---@param managerType string The type of manager to check for ("Addon" or "Talent")
----@return boolean|nil True if managers are missing, nil otherwise
+---@return boolean|nil missingManager True if managers are missing, nil otherwise
 function addon:showMissingManagers(managerType)
     if not managerType then
         return
@@ -24,10 +22,6 @@ function addon:showMissingManagers(managerType)
     local isAddonManager = string.find(managerType, "Addon")
     local isTalentManager = string.find(managerType, "Talent")
     
-    if missingManagerFrame then
-        AceGUI:Release(missingManagerFrame)
-    end
-    
     if isAddonManager and addonManager and isTalentManager and talentManager then
         return
     elseif isAddonManager and addonManager and not isTalentManager then
@@ -36,86 +30,29 @@ function addon:showMissingManagers(managerType)
         return
     end
 
-    missingManagerFrame = AceGUI:Create("Frame")
-    local frame = missingManagerFrame
-    frame:SetCallback("OnClose", function(widget)
-        AceGUI:Release(widget)
-        missingManagerFrame = nil
-    end)
-    frame:SetTitle(addonName)
-    frame:SetLayout("Flow")
-    frame:SetHeight(300)
-    frame:SetWidth(500)
-
-    local scrollcontainer = AceGUI:Create("SimpleGroup")
-    scrollcontainer:SetLayout("Fill")
-    scrollcontainer:SetFullWidth(true)
-    scrollcontainer:SetFullHeight(true)
-    frame:AddChild(scrollcontainer)
-
-    local scroll = AceGUI:Create("ScrollFrame")
-    scroll:SetLayout("Flow")
-    scrollcontainer:AddChild(scroll)
+    local message = AF.WrapTextInColor("Missing Required Managers", "firebrick") .. "\n\n"
+    
     if isAddonManager and not addonManager then
-        local addonContainer = AceGUI:Create("InlineGroup")
-        addonContainer:SetLayout("Flow")
-        addonContainer:SetFullWidth(true)
-        scroll:AddChild(addonContainer)
-
-        local addonHeader = AceGUI:Create("Label")
-        addonHeader:SetText("Missing Addon Manager")
-        addonHeader:SetFullWidth(true)
-        addonHeader:SetFont("Fonts\\FRIZQT__.TTF", 30, "OUTLINE")
-        addonContainer:AddChild(addonHeader)
-
-        local addonLabel = AceGUI:Create("Label")
-        addonLabel:SetText("Supported Addon Managers:")
-        addonLabel:SetFullWidth(true)
-        addonLabel:SetFont("Fonts\\FRIZQT__.TTF", 18, "OUTLINE")
-        addonContainer:AddChild(addonLabel)
-        
-        local ACPLabel = AceGUI:Create("Label")
-        ACPLabel:SetText("- Addon Control Panel")
-        ACPLabel:SetFullWidth(true)
-        ACPLabel:SetFont("Fonts\\FRIZQT__.TTF", 14, "OUTLINE")
-        addonContainer:AddChild(ACPLabel)
-
-        local BALLabel = AceGUI:Create("Label")
-        BALLabel:SetText("- Better Addon List (Does not support Import/Export)")
-        BALLabel:SetFullWidth(true)
-        BALLabel:SetFont("Fonts\\FRIZQT__.TTF", 14, "OUTLINE")
-        addonContainer:AddChild(BALLabel)
-
-        local SAMLabel = AceGUI:Create("Label")
-        SAMLabel:SetText("- Simple Addon Manager (Does not support Import/Export)")
-        SAMLabel:SetFullWidth(true)
-        SAMLabel:SetFont("Fonts\\FRIZQT__.TTF", 14, "OUTLINE")
-        addonContainer:AddChild(SAMLabel)
+        message = message .. AF.WrapTextInColor("Missing Addon Manager", "orange") .. "\n"
+        message = message .. "Supported Addon Managers:\n"
+        message = message .. "• Addon Control Panel\n"
+        message = message .. "• Better Addon List " .. AF.WrapTextInColor("(Does not support Import/Export)", "gray") .. "\n"
+        message = message .. "• Simple Addon Manager " .. AF.WrapTextInColor("(Does not support Import/Export)", "gray") .. "\n\n"
     end
+    
     if isTalentManager and not talentManager then
-        local talentContainer = AceGUI:Create("InlineGroup")
-        talentContainer:SetLayout("Flow")
-        talentContainer:SetFullWidth(true)
-        scroll:AddChild(talentContainer)
-
-        local talentHeader = AceGUI:Create("Label")
-        talentHeader:SetText("Missing Talent Manager")
-        talentHeader:SetFullWidth(true)
-        talentHeader:SetFont("Fonts\\FRIZQT__.TTF", 30, "OUTLINE")
-        talentContainer:AddChild(talentHeader)
-
-        local talentLabel = AceGUI:Create("Label")
-        talentLabel:SetText("Supported Talent Managers:")
-        talentLabel:SetFullWidth(true)
-        talentLabel:SetFont("Fonts\\FRIZQT__.TTF", 18, "OUTLINE")
-        talentContainer:AddChild(talentLabel)
-
-        local talentManagerList = AceGUI:Create("Label")
-        talentManagerList:SetText("Talent Loadout Manager")
-        talentManagerList:SetFullWidth(true)
-        talentManagerList:SetFont("Fonts\\FRIZQT__.TTF", 14, "OUTLINE")
-        talentContainer:AddChild(talentManagerList)
+        message = message .. AF.WrapTextInColor("Missing Talent Manager", "orange") .. "\n"
+        message = message .. "Supported Talent Managers:\n"
+        message = message .. "• Talent Loadout Manager\n\n"
     end
+    
+    message = message .. AF.WrapTextInColor("Please install the required manager addons to use Import/Export functionality.", "yellow")
+
+    -- Show dialog with the current frame as parent
+    local parentFrame = self.frame or UIParent
+    local dialog = AF.GetMessageDialog(parentFrame, message, 350)
+    AF.SetPoint(dialog, "CENTER", parentFrame, "CENTER", 0, 0)
+    
     return true
 end
 
@@ -278,115 +215,46 @@ end
 ---@param loadoutInfo table Additional import info
 ---@param partialImport boolean Whether this is a partial import
 function addon:showImportAddons(loadouts, loadoutInfo, partialImport)
-    local frame = AceGUI:Create("Frame")
-    frame:SetCallback("OnClose", function(widget)
-        AceGUI:Release(widget)
-        addon:getNextImport()
-    end)
-    frame:SetTitle(addonName)
-    frame:SetLayout("Flow")
-
-    local addonHeader = AceGUI:Create("Label")
-    addonHeader:SetText("Addon Sets")
-    addonHeader:SetRelativeWidth(0.5)
-    addonHeader:SetFont("Fonts\\FRIZQT__.TTF", 30, "OUTLINE")
-    frame:AddChild(addonHeader)
-
-    local continueButton = AceGUI:Create("Button")
-    continueButton:SetText("Import Addons sets Now")
-    continueButton:SetRelativeWidth(0.5)
-    continueButton:SetHeight(40)
-    continueButton:SetCallback("OnClick", function()
-        AceGUI:Release(frame)
-        addon:importAddons(loadouts, loadoutInfo, partialImport)
-        addon:getNextImport()
-    end)
-    frame:AddChild(continueButton)
-
-    local scrollcontainer = AceGUI:Create("SimpleGroup")
-    scrollcontainer:SetLayout("Fill")
-    scrollcontainer:SetFullWidth(true)
-    scrollcontainer:SetFullHeight(true)
-    frame:AddChild(scrollcontainer)
-
-    local scroll = AceGUI:Create("ScrollFrame")
-    scroll:SetLayout("Flow")
-    scrollcontainer:AddChild(scroll)
-
-    local addonSetHeader = AceGUI:Create("Label")
-    addonSetHeader:SetText("Imported Addon sets")
-    addonSetHeader:SetFullWidth(true)
-    addonSetHeader:SetFont("Fonts\\FRIZQT__.TTF", 24, "OUTLINE")
-    scroll:AddChild(addonSetHeader)
-
-    local addonContainer = AceGUI:Create("InlineGroup")
-    addonContainer:SetLayout("Flow")
-    addonContainer:SetTitle("Addon Set Names")
-    addonContainer:SetFullWidth(true)
-    scroll:AddChild(addonContainer)
-
-    local addonCurrentName = AceGUI:Create("Label")
-    addonCurrentName:SetText("Current set name")
-    addonCurrentName:SetRelativeWidth(0.5)
-    addonCurrentName:SetFont("Fonts\\FRIZQT__.TTF", 20, "OUTLINE")
-    addonContainer:AddChild(addonCurrentName)
-
-    local addonNewName = AceGUI:Create("Label")
-    addonNewName:SetText("New set name")
-    addonNewName:SetRelativeWidth(0.5)
-    addonNewName:SetFont("Fonts\\FRIZQT__.TTF", 20, "OUTLINE")
-    addonContainer:AddChild(addonNewName)
+    -- Build message for dialog
+    local message = AF.WrapTextInColor("Import Addon Sets", "accent") .. "\n\n"
     
-    local line = AceGUI:Create("Heading")
-    line:SetFullWidth(true)
-    line:SetHeight(10)
-    addonContainer:AddChild(line)
-
-    local missingAddonsHeader
+    local addonSetCount = 0
+    local missingAddonsCount = 0
+    local addonSetsList = {}
+    
     for setAddonName, addonSet in pairs(loadoutInfo.Addons) do
-        local addonCurrentlLabel = AceGUI:Create("Label")
-        addonCurrentlLabel:SetText(setAddonName)
-        addonCurrentlLabel:SetRelativeWidth(0.5)
-        addonCurrentlLabel:SetFont("Fonts\\FRIZQT__.TTF", 16, "OUTLINE")
-        addonContainer:AddChild(addonCurrentlLabel)
-        
-        local oldAddonName = setAddonName
-        local addonNewEditBox = AceGUI:Create("EditBox")
-        addonNewEditBox:SetText(setAddonName)
-        addonNewEditBox:SetRelativeWidth(0.5)
-        addonNewEditBox:SetCallback("OnEnterPressed", function(widget, callback, newAddonName)
-            loadoutInfo.Addons[newAddonName] = addonSet
-            loadoutInfo.Addons[newAddonName].name = newAddonName
-            loadoutInfo.Addons[oldAddonName] = nil
-            loadouts = addon:updateLoadoutName(loadouts, oldAddonName, newAddonName)
-            oldAddonName = newAddonName
-        end)
-        addonContainer:AddChild(addonNewEditBox)
+        addonSetCount = addonSetCount + 1
+        table.insert(addonSetsList, "• " .. setAddonName)
         
         local missingAddons = self:checkMissingAddonsInAddonSet(addonSet, loadoutInfo.ProtectedAddons)
         if missingAddons then
-            if not missingAddonsHeader then
-                missingAddonsHeader = AceGUI:Create("Label")
-                missingAddonsHeader:SetText("Missing addons in imported Addon sets")
-                missingAddonsHeader:SetFullWidth(true)
-                missingAddonsHeader:SetFont("Fonts\\FRIZQT__.TTF", 24, "OUTLINE")
-                scroll:AddChild(missingAddonsHeader)
-            end
-            local missingAddonContainer = AceGUI:Create("InlineGroup")
-            missingAddonContainer:SetLayout("Flow")
-            missingAddonContainer:SetTitle(addonName)
-            missingAddonContainer:SetFullWidth(true)
             for missingAddonName, _ in pairs(missingAddons) do
-                local missingAddonLabel = AceGUI:Create("Label")
-                missingAddonLabel:SetText(missingAddonName)
-                missingAddonLabel:SetRelativeWidth(0.5)
-                missingAddonLabel:SetFont("Fonts\\FRIZQT__.TTF", 12, "OUTLINE")
-                missingAddonContainer:AddChild(missingAddonLabel)
+                missingAddonsCount = missingAddonsCount + 1
             end
-            scroll:AddChild(missingAddonContainer)
-
         end
     end
+    
+    message = message .. "Addon sets to import (" .. addonSetCount .. "):\n"
+    message = message .. table.concat(addonSetsList, "\n") .. "\n\n"
+    
+    if missingAddonsCount > 0 then
+        message = message .. AF.WrapTextInColor("Warning: " .. missingAddonsCount .. " missing addons found!", "orange") .. "\n"
+        message = message .. AF.WrapTextInColor("Missing addons will be removed from imported sets.", "gray") .. "\n\n"
+    end
+    
+    message = message .. AF.WrapTextInColor("Import these addon sets now?", "white")
+
+    -- Show confirmation dialog
+    local parentFrame = self.frame or UIParent
+    local dialog = AF.GetDialog(parentFrame, message, 350)
+    AF.SetPoint(dialog, "CENTER", UIParent, "CENTER", 0, 0)
+    dialog:SetOnConfirm(function()
+        addon:importAddons(loadouts, loadoutInfo, partialImport)
+        addon:getNextImport()
+    end)
+    dialog:SetOnCancel(function()
+        addon:getNextImport()
+    end)
 end
 
 ---Imports talent loadouts
@@ -457,86 +325,33 @@ end
 ---@param loadoutInfo table Additional import info
 ---@param partialImport boolean Whether this is a partial import
 function addon:showImportTalents(loadouts, loadoutInfo, partialImport)
-    local frame = AceGUI:Create("Frame")
-    frame:SetCallback("OnClose", function(widget)
-        AceGUI:Release(widget)
-        addon:getNextImport()
-    end)
-    frame:SetTitle(addonName)
-    frame:SetLayout("Flow")
+    -- Build message for dialog
+    local message = AF.WrapTextInColor("Import Talent Loadouts", "accent") .. "\n\n"
+    
+    local talentCount = 0
+    local talentList = {}
+    
+    for talentName, talentLoadout in pairs(loadoutInfo.Talents) do
+        talentCount = talentCount + 1
+        local displayName = talentLoadout.displayName or talentName
+        table.insert(talentList, "• " .. displayName)
+    end
+    
+    message = message .. "Talent loadouts to import (" .. talentCount .. "):\n"
+    message = message .. table.concat(talentList, "\n") .. "\n\n"
+    message = message .. AF.WrapTextInColor("Import these talent loadouts now?", "white")
 
-    local talentHeader = AceGUI:Create("Label")
-    talentHeader:SetText("Talent Loadouts")
-    talentHeader:SetRelativeWidth(0.5)
-    talentHeader:SetFont("Fonts\\FRIZQT__.TTF", 30, "OUTLINE")
-    frame:AddChild(talentHeader)
-
-    local continueButton = AceGUI:Create("Button")
-    continueButton:SetText("Import Talents Now")
-    continueButton:SetRelativeWidth(0.5)
-    continueButton:SetHeight(40)
-    continueButton:SetCallback("OnClick", function()
-        AceGUI:Release(frame)
+    -- Show confirmation dialog
+    local parentFrame = self.frame or UIParent
+    local dialog = AF.GetDialog(parentFrame, message, 350)
+    AF.SetPoint(dialog, "CENTER", UIParent, "CENTER", 0, 0)
+    dialog:SetOnConfirm(function()
         addon:importTalents(loadouts, loadoutInfo, partialImport)
         addon:getNextImport()
     end)
-    frame:AddChild(continueButton)
-
-    local scrollcontainer = AceGUI:Create("SimpleGroup")
-    scrollcontainer:SetLayout("Fill")
-    scrollcontainer:SetFullWidth(true)
-    scrollcontainer:SetFullHeight(true)
-    frame:AddChild(scrollcontainer)
-
-    local scroll = AceGUI:Create("ScrollFrame")
-    scroll:SetLayout("Flow")
-    scrollcontainer:AddChild(scroll)
-
-    local talentContainer = AceGUI:Create("InlineGroup")
-    talentContainer:SetLayout("Flow")
-    talentContainer:SetTitle("Talent Loadout Names")
-    talentContainer:SetFullWidth(true)
-    scroll:AddChild(talentContainer)
-
-    local talentCurrentName = AceGUI:Create("Label")
-    talentCurrentName:SetText("Current talent name")
-    talentCurrentName:SetRelativeWidth(0.5)
-    talentCurrentName:SetFont("Fonts\\FRIZQT__.TTF", 20, "OUTLINE")
-    talentContainer:AddChild(talentCurrentName)
-
-    local talentNewName = AceGUI:Create("Label")
-    talentNewName:SetText("New talent name")
-    talentNewName:SetRelativeWidth(0.5)
-    talentNewName:SetFont("Fonts\\FRIZQT__.TTF", 20, "OUTLINE")
-    talentContainer:AddChild(talentNewName)
-    
-    local line = AceGUI:Create("Heading")
-    line:SetFullWidth(true)
-    line:SetHeight(10)
-    talentContainer:AddChild(line)
-
-    for talentName, talentLoadout in pairs(loadoutInfo.Talents) do
-        local talentCurrentlLabel = AceGUI:Create("Label")
-        talentCurrentlLabel:SetText(talentName)
-        talentCurrentlLabel:SetRelativeWidth(0.5)
-        talentCurrentlLabel:SetFont("Fonts\\FRIZQT__.TTF", 16, "OUTLINE")
-        talentContainer:AddChild(talentCurrentlLabel)
-        
-        local oldTalentName = talentName
-        local talentNewEditBox = AceGUI:Create("EditBox")
-        talentNewEditBox:SetText(talentName)
-        talentNewEditBox:SetRelativeWidth(0.5)
-        talentNewEditBox:SetCallback("OnEnterPressed", function(widget, callback, newTalentName)
-            local displayName = select(2, {strsplit("|", newTalentName)}) or newTalentName
-            loadoutInfo.Talents[newTalentName] = talentLoadout
-            loadoutInfo.Talents[newTalentName].name = newTalentName
-            loadoutInfo.Talents[newTalentName].displayName = displayName
-            loadoutInfo.Talents[oldTalentName] = nil
-            loadouts = addon:updateLoadoutName(loadouts, oldTalentName, newTalentName)
-            oldTalentName = newTalentName
-        end)
-        talentContainer:AddChild(talentNewEditBox)
-    end
+    dialog:SetOnCancel(function()
+        addon:getNextImport()
+    end)
 end
 
 local importFunctions = {
@@ -557,107 +372,145 @@ function addon:getNextImport()
 end
 
 ---Shows the import frame UI
-function addon:ShowImportFrame()
+function addon:ShowImportFrame(onCloseCallback)
     local frame = self.frame
     if self.frame and self.frameType == "Import" then
-        self.frame:ReleaseChildren()
+        if self.frame.content then
+            self.frame.content:Hide()
+            self.frame.content = nil
+        end
     else
         if self.frame then
-            AceGUI:Release(self.frame)
+            self.frame:Hide()
             self.frame = nil
         end
         self.frameType = "Import"
-        frame = AceGUI:Create("Frame")
-        frame:SetTitle(addonName)
-        frame:SetLayout("Flow")
-        frame:SetCallback("OnClose", function(widget)
-            AceGUI:Release(widget)
-            self.frame = nil
+        frame = AF.CreateHeaderedFrame(AF.UIParent, "InstanceLoadouts_Import",
+            AF.GetIconString("IL", 14, 14, "InstanceLoadouts") .. " " .. addonName, 350, 400)
+        AF.SetPoint(frame, "CENTER", UIParent, "CENTER", 0, 0)
+        frame:SetTitleColor("white")
+        frame:SetFrameLevel(100)
+        frame:SetTitleJustify("LEFT")
+
+        local pageName = AF.CreateFontString(frame.header, nil, "white", "AF_FONT_TITLE")
+        AF.SetPoint(pageName, "CENTER", frame.header, "CENTER", 0, 0)
+        pageName:SetJustifyH("CENTER")
+        pageName:SetText(self.frameType)
+
+        local optionsButton = AF.CreateButton(frame.header, "", addonName, 20, 20)
+        AF.ApplyDefaultBackdropWithColors(optionsButton, "header")
+        AF.SetPoint(optionsButton, "TOPRIGHT", -19, 0)
+
+        optionsButton:SetTexture("OptionsIcon-Brown", {12, 12}, {"CENTER", 0, 0}, true)
+        optionsButton:SetFrameLevel(frame:GetFrameLevel() + 10)
+        optionsButton:SetOnClick(function()
+            self.transitioning = true
+            addon:openConfig()
         end)
+
+        frame:SetScript("OnHide", function()
+            self.frame = nil
+            -- Only call onCloseCallback if we're not transitioning to another window
+            if onCloseCallback and not self.transitioning then
+                onCloseCallback()
+            end
+        end)
+
+        _G["InstanceLoadouts_Import"] = frame
+        table.insert(UISpecialFrames, "InstanceLoadouts_Import")
+        frame:Show()
     end
-    self:createOptionsButton(frame)
 
-    local container = AceGUI:Create("SimpleGroup")
-    container:SetLayout("Flow")
-    container:SetFullWidth(true)
-    frame:AddChild(container)
+    local yOffset = -80
 
-    local container = AceGUI:Create("SimpleGroup")
-    container:SetLayout("Flow")
-    container:SetRelativeWidth(0.25)
-    frame:AddChild(container)
+    local continueButton = AF.CreateButton(frame, "Invalid Import", "red", 200, 40)
+    AF.SetPoint(continueButton, "TOPLEFT", frame, "TOPLEFT", 20, yOffset)
+    continueButton:SetEnabled(false)
 
-    local continueButton = AceGUI:Create("Button")
-    continueButton:SetText("Invalid Import")
-    continueButton:SetDisabled(true)
-    continueButton:SetRelativeWidth(0.5)
-    continueButton:SetHeight(40)
-    frame:AddChild(continueButton)
+    local partialImport = AF.CreateCheckButton(frame, "Partial Import", function(checked)
+        -- Checkbox callback handled in OnTextChanged
+    end)
+    AF.SetPoint(partialImport, "TOPLEFT", continueButton, "TOPRIGHT", 20, -5)
+    partialImport:SetChecked(false)
+    partialImport:SetEnabled(false)
+    
+    -- Add description for partial import
+    local partialImportDesc = AF.CreateFontString(frame, "Only loadouts that are not set to default (-1) (Not set to none) will be imported", "gray", "AF_FONT_SMALL")
+    AF.SetPoint(partialImportDesc, "TOPLEFT", partialImport, "BOTTOMLEFT", 20, -2)
 
-    local partialImport = AceGUI:Create("CheckBox")
-    partialImport:SetValue(false)
-    partialImport:SetDisabled(true)
-    partialImport:SetLabel("Partial Import")
-    partialImport:SetRelativeWidth(0.33)
-    -- partialImport:SetHeight(150)
-    partialImport:SetDescription("If checked then only loadouts that are defined (Not set to none) will be imported")
-    frame:AddChild(partialImport)
+    yOffset = yOffset - 70
+    local autoAddonImport = AF.CreateCheckButton(frame, "Auto Import Addons", function(checked)
+        -- Checkbox callback handled in OnTextChanged
+    end)
+    AF.SetPoint(autoAddonImport, "TOPLEFT", frame, "TOPLEFT", 20, yOffset)
+    autoAddonImport:SetChecked(false)
+    autoAddonImport:SetEnabled(false)
+    
+    -- Add description for auto addon import
+    local autoAddonDesc = AF.CreateFontString(frame, "Addon sets will override sets in Addon Control Panel and missing addons will be removed", "gray", "AF_FONT_SMALL")
+    AF.SetPoint(autoAddonDesc, "TOPLEFT", autoAddonImport, "BOTTOMLEFT", 20, -2)
 
-    local autoAddonImport = AceGUI:Create("CheckBox")
-    autoAddonImport:SetValue(false)
-    autoAddonImport:SetDisabled(true)
-    autoAddonImport:SetLabel("Auto Import Addons")
-    autoAddonImport:SetRelativeWidth(0.33)
-    -- autoAddonImport:SetHeight(150)
-    autoAddonImport:SetDescription("If checked then addon sets will override sets in Addon Control Panel and any missing addons will be removed from the sets without warning")
-    frame:AddChild(autoAddonImport)
+    local autoTalentImport = AF.CreateCheckButton(frame, "Auto Import Talents", function(checked)
+        -- Checkbox callback handled in OnTextChanged
+    end)
+    AF.SetPoint(autoTalentImport, "TOPLEFT", frame, "TOPLEFT", 400, yOffset)
+    autoTalentImport:SetChecked(false)
+    autoTalentImport:SetEnabled(false)
+    
+    -- Add description for auto talent import
+    local autoTalentDesc = AF.CreateFontString(frame, "Talent loadouts will override loadouts in Talent Loadout Manager", "gray", "AF_FONT_SMALL")
+    AF.SetPoint(autoTalentDesc, "TOPLEFT", autoTalentImport, "BOTTOMLEFT", 20, -2)
 
-    local autoTalentImport = AceGUI:Create("CheckBox")
-    autoTalentImport:SetValue(false)
-    autoTalentImport:SetDisabled(true)
-    autoTalentImport:SetLabel("Auto Import Talents")
-    autoTalentImport:SetRelativeWidth(0.33)
-    -- autoTalentImport:SetHeight(150)
-    autoTalentImport:SetDescription("If checked then talent loadouts will override loadouts in Talent Loadout Manager without warning")
-    frame:AddChild(autoTalentImport)
+    yOffset = yOffset - 80
+    local editboxLabel = AF.CreateFontString(frame, "Import String", "white")
+    AF.SetPoint(editboxLabel, "TOPLEFT", frame, "TOPLEFT", 20, yOffset)
 
-
-    local multiEditbox = AceGUI:Create("MultiLineEditBox")
-    multiEditbox:SetCallback("OnTextChanged", function(widget, callback, payload)
+    yOffset = yOffset - 25
+    local multiEditbox = AF.CreateEditBox(frame, "", 760, 320)
+    AF.SetPoint(multiEditbox, "TOPLEFT", frame, "TOPLEFT", 20, yOffset)
+    -- Enable multiline behavior
+    multiEditbox:SetMultiLine(true)
+    multiEditbox:EnableMouse(true)
+    multiEditbox:SetAutoFocus(false)
+    multiEditbox:SetMaxLetters(0)
+    multiEditbox:SetScript("OnTextChanged", function(self)
+        local payload = self:GetText()
         local importType, loadouts, loadoutInfo = addon:isValidImportString(payload)
         local missingManagers = addon:showMissingManagers(importType)
         if importType and not missingManagers then
-            partialImport:SetValue(true)
-            partialImport:SetDisabled(false)
+            partialImport:SetChecked(true)
+            partialImport:SetEnabled(true)
             local isAddonImport = string.find(importType, "Addon")
             local isTalentImport = string.find(importType, "Talent")
 
-            autoAddonImport:SetValue(isAddonImport)
-            autoAddonImport:SetDisabled(not isAddonImport)
-            autoTalentImport:SetValue(isTalentImport)
-            autoTalentImport:SetDisabled(not isTalentImport)
+            autoAddonImport:SetChecked(isAddonImport)
+            autoAddonImport:SetEnabled(isAddonImport)
+            autoTalentImport:SetChecked(isTalentImport)
+            autoTalentImport:SetEnabled(isTalentImport)
             continueButton:SetText("Import " .. importType .. " Loadouts")
-            continueButton:SetDisabled(false)
-            continueButton:SetCallback("OnClick", function()
-                addon:importJournalIDs(loadoutInfo.journalIDs)
-                if autoAddonImport:GetValue()then
-                    addon:importAddons(loadouts, {Addons = loadoutInfo.Addons, ProtectedAddons = loadoutInfo.ProtectedAddons}, partialImport:GetValue())
+            continueButton:SetEnabled(true)
+            continueButton:SetOnClick(function()
+                if loadoutInfo and loadoutInfo.journalIDs then
+                    addon:importJournalIDs(loadoutInfo.journalIDs)
+                end
+                if autoAddonImport:GetChecked() then
+                    addon:importAddons(loadouts, {Addons = loadoutInfo.Addons, ProtectedAddons = loadoutInfo.ProtectedAddons}, partialImport:GetChecked())
                 elseif isAddonImport then
-                    tinsert(importQueue, {func = "Addon", loadouts = loadouts, loadoutInfo = {Addons = loadoutInfo.Addons, ProtectedAddons = loadoutInfo.ProtectedAddons}, partialImport = partialImport:GetValue()})
+                    tinsert(importQueue, {func = "Addon", loadouts = loadouts, loadoutInfo = {Addons = loadoutInfo.Addons, ProtectedAddons = loadoutInfo.ProtectedAddons}, partialImport = partialImport:GetChecked()})
                 end
-                if autoTalentImport:GetValue() then
-                    addon:importTalents(loadouts, {Talents = loadoutInfo.Talents}, partialImport:GetValue())
+                if autoTalentImport:GetChecked() then
+                    addon:importTalents(loadouts, {Talents = loadoutInfo.Talents}, partialImport:GetChecked())
                 elseif isTalentImport then
-                    tinsert(importQueue, {func = "Talent", loadouts = loadouts, loadoutInfo = {Talents = loadoutInfo.Talents}, partialImport = partialImport:GetValue()})
+                    tinsert(importQueue, {func = "Talent", loadouts = loadouts, loadoutInfo = {Talents = loadoutInfo.Talents}, partialImport = partialImport:GetChecked()})
                 end
-                AceGUI:Release(frame)
-                self.frame = nil
+                frame:Hide()
+                addon.frame = nil
                 addon:getNextImport()
             end)
 
-            if isTalentImport then
+            if isTalentImport and loadoutInfo and loadoutInfo.Talents then
                 local importedClassName
-                local currentClass =  self.db.keys.class
+                local currentClass = addon.db.keys.class
                 for _, configInfo in pairs(loadoutInfo.Talents) do
                     local className, classFile = GetClassInfo(configInfo.classID)
                     if currentClass ~= classFile then
@@ -666,41 +519,39 @@ function addon:ShowImportFrame()
                     end
                 end
                 if importedClassName then
-                    partialImport:SetValue(false)
-                    partialImport:SetDisabled(true)
-                    autoAddonImport:SetValue(false)
-                    autoAddonImport:SetDisabled(true)
-                    autoTalentImport:SetValue(false)
-                    autoTalentImport:SetDisabled(true)
+                    partialImport:SetChecked(false)
+                    partialImport:SetEnabled(false)
+                    autoAddonImport:SetChecked(false)
+                    autoAddonImport:SetEnabled(false)
+                    autoTalentImport:SetChecked(false)
+                    autoTalentImport:SetEnabled(false)
                     continueButton:SetText("Can not import Talents for " .. importedClassName)
-                    continueButton:SetDisabled(true)
+                    continueButton:SetEnabled(false)
                 end
             end
         else
-            partialImport:SetValue(false)
-            partialImport:SetDisabled(true)
-            autoAddonImport:SetValue(false)
-            autoAddonImport:SetDisabled(true)
-            autoTalentImport:SetValue(false)
-            autoTalentImport:SetDisabled(true)
+            partialImport:SetChecked(false)
+            partialImport:SetEnabled(false)
+            autoAddonImport:SetChecked(false)
+            autoAddonImport:SetEnabled(false)
+            autoTalentImport:SetChecked(false)
+            autoTalentImport:SetEnabled(false)
             continueButton:SetText("Invalid Import")
-            continueButton:SetDisabled(true)
+            continueButton:SetEnabled(false)
         end
     end)
-    multiEditbox:SetLabel("Import String")
-    multiEditbox:SetFullHeight(true)
-    multiEditbox:SetFullWidth(true)
-    frame:AddChild(multiEditbox)
+    
     self.frame = frame
 end
 
 ---Toggles the import UI open/closed
-function addon:toggleImport()
+---@param onCloseCallback function|nil Optional callback to execute when the window closes
+function addon:toggleImport(onCloseCallback)
     if addon.frame and addon.frameType == "Import" then
-        AceGUI:Release(addon.frame)
+        addon.frame:Hide()
         addon.frame = nil
     else
-        addon:ShowImportFrame()
+        addon:ShowImportFrame(onCloseCallback)
     end
 end
 
@@ -896,48 +747,66 @@ local exportFunctions = {
 }
 
 ---Shows the export frame UI
-function addon:ShowExportFrame()
+function addon:ShowExportFrame(onCloseCallback)
     local frame = self.frame
     if self.frame and self.frameType == "Export" then
-        self.frame:ReleaseChildren()
+        if self.frame.content then
+            self.frame.content:Hide()
+            self.frame.content = nil
+        end
     else
         if self.frame then
-            AceGUI:Release(self.frame)
+            self.frame:Hide()
             self.frame = nil
         end
         self.frameType = "Export"
-        frame = AceGUI:Create("Frame")
-        frame:SetTitle(addonName)
-        frame:SetLayout("Flow")
-        frame:SetCallback("OnClose", function(widget)
-            AceGUI:Release(widget)
-            self.frame = nil
+        frame = AF.CreateHeaderedFrame(AF.UIParent, "InstanceLoadouts_Export",
+            AF.GetIconString("IL", 14, 14, "InstanceLoadouts") .. " " .. addonName, 400, 400)
+        AF.SetPoint(frame, "CENTER", UIParent, "CENTER", 0, 0)
+        frame:SetTitleColor("white")
+        frame:SetFrameLevel(100)
+        frame:SetTitleJustify("LEFT")
+
+        local pageName = AF.CreateFontString(frame.header, nil, "white", "AF_FONT_TITLE")
+        AF.SetPoint(pageName, "CENTER", frame.header, "CENTER", 0, 0)
+        pageName:SetJustifyH("CENTER")
+        pageName:SetText(self.frameType)
+
+        local optionsButton = AF.CreateButton(frame.header, "", addonName, 20, 20)
+        AF.ApplyDefaultBackdropWithColors(optionsButton, "header")
+        AF.SetPoint(optionsButton, "TOPRIGHT", -19, 0)
+
+        optionsButton:SetTexture("OptionsIcon-Brown", {12, 12}, {"CENTER", 0, 0}, true)
+        optionsButton:SetFrameLevel(frame:GetFrameLevel() + 10)
+        optionsButton:SetOnClick(function()
+            self.transitioning = true
+            addon:openConfig()
         end)
+
+        frame:SetScript("OnHide", function()
+            self.frame = nil
+            -- Only call onCloseCallback if we're not transitioning to another window
+            if onCloseCallback and not self.transitioning then
+                onCloseCallback()
+            end
+        end)
+
+        _G["InstanceLoadouts_Export"] = frame
+        table.insert(UISpecialFrames, "InstanceLoadouts_Export")
+        frame:Show()
     end
-    self:createOptionsButton(frame)
 
-    local header = AceGUI:Create("Label")
-    header:SetText("Export Loadouts")
-    header:SetFullWidth(true)
-    header:SetFont("Fonts\\FRIZQT__.TTF", 30, "OUTLINE")
-    frame:AddChild(header)
-    
-    local addonsCheckbox = AceGUI:Create("CheckBox")
-    addonsCheckbox:SetValue(false)
-    addonsCheckbox:SetLabel("Addon Loadouts")
-    frame:AddChild(addonsCheckbox)
-    
-    local talentsCheckbox = AceGUI:Create("CheckBox")
-    talentsCheckbox:SetValue(false)
-    talentsCheckbox:SetLabel("Talent Loadouts")
-    frame:AddChild(talentsCheckbox)
+    local exportSettings = AF.CreateBorderedFrame(frame, nil, frame:GetWidth() - 10, 45, "background2", "black")
+    AF.SetPoint(exportSettings, "TOPLEFT", 5, -20)
+    exportSettings:SetLabel("Export Settings")
 
-    local multiEditbox = AceGUI:Create("MultiLineEditBox")
-    multiEditbox:SetLabel("Export String")
-    multiEditbox:DisableButton(true)
-    multiEditbox:SetFullHeight(true)
-    multiEditbox:SetFullWidth(true)
-    frame:AddChild(multiEditbox)
+    local versionPane = AF.CreateTitledPane(exportSettings, "Export String", exportSettings:GetWidth(), 20)
+    AF.SetPoint(versionPane, "TOPLEFT", exportSettings, "BOTTOMLEFT", 0, -5)
+
+    local height = frame:GetHeight() - exportSettings:GetHeight() - versionPane:GetHeight() - exportSettings.label:GetStringHeight() - 5*3
+    local multiEditbox = AF.CreateEditBox(versionPane, "", versionPane:GetWidth(), height)
+    AF.SetPoint(multiEditbox, "TOPLEFT", versionPane, "BOTTOMLEFT", 0, -5)
+    multiEditbox:SetEnabled(false)
     
     local function getExportString(exportType, checkbox)
         if exportType then
@@ -945,55 +814,66 @@ function addon:ShowExportFrame()
             if not missingManagers then
                 local exportString = exportFunctions[exportType](addon)
                 if exportString == "" then
-                    header:SetText("No Loadouts to Export")
+                    multiEditbox.label:SetText("No Loadouts to Export")
                 else
-                    header:SetText("Export Loadouts")
+                    multiEditbox.label:SetText("Export Loadouts")
                 end
+                multiEditbox:SetEnabled(true)
                 multiEditbox:SetText(exportString)
-                multiEditbox:SetCallback("OnTextChanged", function()
-                    multiEditbox:SetText(exportString)
+                multiEditbox:SetScript("OnTextChanged", function(self)
+                    self:SetText(exportString)
                 end)
             else
-                checkbox:SetValue(false)
+                checkbox:SetChecked(false)
             end
         else
+            multiEditbox:SetEnabled(false)
             multiEditbox:SetText("")
-            multiEditbox:SetCallback("OnTextChanged", function()
-                multiEditbox:SetText("")
+            multiEditbox:SetScript("OnTextChanged", function(self)
+                self:SetText("")
             end)
         end
     end
-    addonsCheckbox:SetCallback("OnValueChanged", function(widget, callback, value)
+
+    local addonsCheckbox, talentsCheckbox
+    
+    addonsCheckbox = AF.CreateCheckButton(exportSettings, "Addon Loadouts", function(checked)
         local exportType
-        if value and talentsCheckbox:GetValue() then
+        if checked and talentsCheckbox and talentsCheckbox:GetChecked() then
             exportType = "Addon and Talent"
-        elseif value then
+        elseif checked then
             exportType = "Addon"
-        elseif talentsCheckbox:GetValue() then
+        elseif talentsCheckbox and talentsCheckbox:GetChecked() then
             exportType = "Talent"
         end
         getExportString(exportType, addonsCheckbox)
     end)
-    talentsCheckbox:SetCallback("OnValueChanged", function(widget, callback, value)
+    AF.SetPoint(addonsCheckbox, "TOPLEFT", exportSettings, "TOPLEFT", 5, -5)
+    
+    talentsCheckbox = AF.CreateCheckButton(exportSettings, "Talent Loadouts", function(checked)
         local exportType
-        if value and addonsCheckbox:GetValue() then
+        if checked and addonsCheckbox:GetChecked() then
             exportType = "Addon and Talent"
-        elseif value then
+        elseif checked then
             exportType = "Talent"
-        elseif addonsCheckbox:GetValue() then
+        elseif addonsCheckbox:GetChecked() then
             exportType = "Addon"
         end
         getExportString(exportType, talentsCheckbox)
     end)
+    AF.SetPoint(talentsCheckbox, "TOPLEFT", addonsCheckbox, "BOTTOMLEFT", 0, -5)
+    
     self.frame = frame
 end
 
 ---Toggles the export UI open/closed
-function addon:toggleExport()
+---Toggles the export UI open/closed
+---@param onCloseCallback function|nil Optional callback to execute when the window closes
+function addon:toggleExport(onCloseCallback)
     if addon.frame and addon.frameType == "Export" then
-        AceGUI:Release(addon.frame)
+        addon.frame:Hide()
         addon.frame = nil
     else
-        addon:ShowExportFrame()
+        addon:ShowExportFrame(onCloseCallback)
     end
 end

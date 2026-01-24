@@ -1,7 +1,6 @@
 local addonName, addon = ...
 
--- Ace3 libs
-local AceGUI = LibStub("AceGUI-3.0")
+local AF = _G.AbstractFramework
 
 local isGarrison = {
     1152, -- Horde Garrison lvl 1
@@ -13,21 +12,17 @@ local isGarrison = {
 }
 
 ---Creates the reminder GUI for Specializations
----@param frame table The AceGUI frame to add elements to
+---@param parent Frame The parent frame to add elements to
 ---@param instanceType string The instance type (e.g. "Dungeon", "Raid")  
 ---@param instance number The instance ID
 ---@return boolean True if specialization needs to be changed
-function addon:createSpecializationFrame(frame, instanceType, instance)
+function addon:createSpecializationFrame(parent, instanceType, instance)
     local dbLoadouts = self.db.char.loadouts
     local change = false
-    local container = AceGUI:Create("InlineGroup")
-    container:SetLayout("Flow")
-    container:SetFullWidth(true)
-    local header = AceGUI:Create("Label")
-    header:SetText("Specialization:")
-    header:SetFont("Fonts\\FRIZQT__.TTF", 22, "OUTLINE")
-    header:SetRelativeWidth(0.5)
-    container:AddChild(header)
+    
+    local container = AF.CreateTitledPane(parent, "Specialization", parent:GetWidth() - 10, 40)
+    AF.SetPoint(container, "TOPLEFT", 5, -60)
+    
     if next(self.externalInfo.Specialization) then
         local currentSpec = GetSpecialization()
         local specializationSet = dbLoadouts[instanceType][instance].Specialization
@@ -36,19 +31,17 @@ function addon:createSpecializationFrame(frame, instanceType, instance)
             specializationSet = dbLoadouts[instanceType][-1].Specialization
         end
         if specializationSet == -1 then
-            local label = AceGUI:Create("Label")
-            label:SetText("Specialization not set")
-            label:SetFont("Fonts\\FRIZQT__.TTF", 16, "OUTLINE")
-            label:SetRelativeWidth(0.5)
-            container:AddChild(label)
+            local label = AF.CreateFontString(container, "Specialization not set", "gray")
+            AF.SetPoint(label, "TOPLEFT", 0, -25)
         elseif specializationSet ~= currentSpec then
             change = true
             local _, name = GetSpecializationInfo(specializationSet)
-            local button = AceGUI:Create("Button")
-            button:SetText("Change specialization to " .. name)
-            button:SetRelativeWidth(0.5)
-            button:SetCallback("OnClick", function(widget, callback, mouseButton)
-                button:SetDisabled(true)
+            local button = AF.CreateButton(container, "Change Specialization to " .. name, "static", parent:GetWidth() - 10, 25)
+            AF.SetPoint(button, "TOPLEFT", 0, -25)
+            button:SetTextHighlightColor(addonName)
+            button:SetBorderHighlightColor(addonName)
+            button:SetOnClick(function()
+                button:SetEnabled(false)
                 C_SpecializationInfo.SetSpecialization(specializationSet)
                 addon:RegisterEvent("ACTIVE_PLAYER_SPECIALIZATION_CHANGED", function()
                     if specializationSet == GetSpecialization() then
@@ -60,48 +53,36 @@ function addon:createSpecializationFrame(frame, instanceType, instance)
                     end
                 end)
                 addon:RegisterEvent("SPECIALIZATION_CHANGE_CAST_FAILED", function()
-                    button:SetDisabled(false)
+                    button:SetEnabled(true)
                     addon:UnregisterEvent("ACTIVE_PLAYER_SPECIALIZATION_CHANGED")
                     addon:UnregisterEvent("SPECIALIZATION_CHANGE_CAST_FAILED")
-
                 end)
             end)
-            container:AddChild(button)
         else
             local _, name = GetSpecializationInfo(currentSpec)
-            local label = AceGUI:Create("Label")
-            label:SetText("Current Spec is " .. name)
-            label:SetFont("Fonts\\FRIZQT__.TTF", 16, "OUTLINE")
-            label:SetRelativeWidth(0.5)
-            container:AddChild(label)
+            local label = AF.CreateFontString(container, "Current Specialization is " .. name, "white")
+            AF.SetPoint(label, "TOPLEFT", 0, -25)
         end
     else
-        local label = AceGUI:Create("Label")
-        label:SetText("No Specialization Manager Found")
-        label:SetFont("Fonts\\FRIZQT__.TTF", 16, "OUTLINE")
-        label:SetFullWidth(true)
-        container:AddChild(label)
+        local label = AF.CreateFontString(container, "No Specialization Manager Found", "gray")
+        AF.SetPoint(label, "TOPLEFT", 0, -25)
     end
-    frame:AddChild(container)
+    
     return change
 end
 
 ---Creates the reminder GUI for Talents
----@param frame table The AceGUI frame to add elements to
+---@param parent Frame The parent frame to add elements to
 ---@param instanceType string The instance type
 ---@param instance number The instance ID 
 ---@return boolean True if talents need to be changed
-function addon:createTalentsFrame(frame, instanceType, instance)
+function addon:createTalentsFrame(parent, instanceType, instance)
     local dbLoadouts = self.db.char.loadouts
     local change = false
-    local container = AceGUI:Create("InlineGroup")
-    container:SetLayout("Flow")
-    container:SetFullWidth(true)
-    local header = AceGUI:Create("Label")
-    header:SetText("Talents:")
-    header:SetFont("Fonts\\FRIZQT__.TTF", 22, "OUTLINE")
-    header:SetRelativeWidth(0.5)
-    container:AddChild(header)
+    
+    local container = AF.CreateTitledPane(parent, "Talents", parent:GetWidth() - 10, 40)
+    AF.SetPoint(container, "TOPLEFT", 5, -115)
+    
     if next(self.externalInfo.Talents) then
         local specializationSet = dbLoadouts[instanceType][instance].Specialization
         local overrideSpecializationSet = dbLoadouts[instanceType][instance]["Override Default Specialization"]
@@ -115,11 +96,8 @@ function addon:createTalentsFrame(frame, instanceType, instance)
         end
 
         if talentSet == -1 then
-            local label = AceGUI:Create("Label")
-            label:SetText("Talents not set")
-            label:SetFont("Fonts\\FRIZQT__.TTF", 16, "OUTLINE")
-            label:SetRelativeWidth(0.5)
-            container:AddChild(label)
+            local label = AF.CreateFontString(container, "Talents not set", "gray")
+            AF.SetPoint(label, "TOPLEFT", 0, -25)
         else
             if specializationSet == GetSpecialization() then
                 local specID = GetSpecializationInfo(specializationSet)
@@ -133,30 +111,27 @@ function addon:createTalentsFrame(frame, instanceType, instance)
                 if talentSet ~= configID then
                     change = true
                     local name = self.externalInfo.Talents[talentSet]
-                    local button = AceGUI:Create("Button")
-                    button:SetText("Change Talents to " .. name)
-                    button:SetRelativeWidth(0.5)
-                    button:SetCallback("OnClick", function(widget, callback, mouseButton)
+                    local button = AF.CreateButton(container, "Change Talents to " .. name, "static", parent:GetWidth() - 10, 25)
+                    AF.SetPoint(button, "TOPLEFT", 0, -25)
+                    button:SetTextHighlightColor(addonName)
+                    button:SetBorderHighlightColor(addonName)
+                    button:SetOnClick(function()
                         if talentManager then
                             self.manager.loadTalentLoadout(talentSet, true)
-                            button:SetDisabled(true)
+                            button:SetEnabled(false)
                             addon:RegisterEvent("TRAIT_CONFIG_UPDATED", function()
-                                container:ReleaseChildren()
-                                header = AceGUI:Create("Label")
-                                header:SetText("Talents:")
-                                header:SetFont("Fonts\\FRIZQT__.TTF", 22, "OUTLINE")
-                                header:SetRelativeWidth(0.5)
-                                container:AddChild(header)
-                                local label = AceGUI:Create("Label")
-                                label:SetText("Current Talents are " .. name)
-                                label:SetFont("Fonts\\FRIZQT__.TTF", 16, "OUTLINE")
-                                label:SetRelativeWidth(0.5)
-                                container:AddChild(label)
+                                for _, child in ipairs({container:GetChildren()}) do
+                                    child:Hide()
+                                end
+                                
+                                local label = AF.CreateFontString(container, "Current Talents are " .. name, "white")
+                                AF.SetPoint(label, "TOPLEFT", 10, -25)
+                                
                                 addon:UnregisterEvent("TRAIT_CONFIG_UPDATED")
                                 addon:UnregisterEvent("CONFIG_COMMIT_FAILED")
                             end)
                             addon:RegisterEvent("CONFIG_COMMIT_FAILED", function()
-                                button:SetDisabled(false)
+                                button:SetEnabled(true)
                                 addon:UnregisterEvent("TRAIT_CONFIG_UPDATED")
                                 addon:UnregisterEvent("CONFIG_COMMIT_FAILED")
                             end)
@@ -168,89 +143,65 @@ function addon:createTalentsFrame(frame, instanceType, instance)
                             PlayerSpellsFrame.TalentsFrame.LoadSystem:SetSelectionID(talentSet)
                             if result == 1 then
                                 C_ClassTalents.UpdateLastSelectedSavedConfigID(specID, talentSet)
-                                container:ReleaseChildren()
-                                header = AceGUI:Create("Label")
-                                header:SetText("Talents:")
-                                header:SetFont("Fonts\\FRIZQT__.TTF", 22, "OUTLINE")
-                                header:SetRelativeWidth(0.5)
-                                container:AddChild(header)
-                                local label = AceGUI:Create("Label")
-                                label:SetText("Current Talents are " .. name)
-                                label:SetFont("Fonts\\FRIZQT__.TTF", 16, "OUTLINE")
-                                label:SetRelativeWidth(0.5)
-                                container:AddChild(label)
+                                for _, child in ipairs({container:GetChildren()}) do
+                                    child:Hide()
+                                end
+                                
+                                local label = AF.CreateFontString(container, "Current Talents are " .. name, "white")
+                                AF.SetPoint(label, "TOPLEFT", 0, -25)
                             elseif result == 2 then
-                                button:SetDisabled(true)
+                                button:SetEnabled(false)
                                 addon:RegisterEvent("TRAIT_CONFIG_UPDATED", function()
                                     if specializationSet == GetSpecialization() then
                                         C_ClassTalents.UpdateLastSelectedSavedConfigID(specID, talentSet)
-                                        container:ReleaseChildren()
-                                        header = AceGUI:Create("Label")
-                                        header:SetText("Talents:")
-                                        header:SetFont("Fonts\\FRIZQT__.TTF", 22, "OUTLINE")
-                                        header:SetRelativeWidth(0.5)
-                                        container:AddChild(header)
-                                        local label = AceGUI:Create("Label")
-                                        label:SetText("Current Talents are " .. name)
-                                        label:SetFont("Fonts\\FRIZQT__.TTF", 16, "OUTLINE")
-                                        label:SetRelativeWidth(0.5)
-                                        container:AddChild(label)
+                                        for _, child in ipairs({container:GetChildren()}) do
+                                            child:Hide()
+                                        end
+                                        
+                                        local label = AF.CreateFontString(container, "Current Talents are " .. name, "white")
+                                        AF.SetPoint(label, "TOPLEFT", 0, -25)
+
                                         addon:UnregisterEvent("TRAIT_CONFIG_UPDATED")
                                         addon:UnregisterEvent("CONFIG_COMMIT_FAILED")
                                     end
                                 end)
                                 addon:RegisterEvent("CONFIG_COMMIT_FAILED", function()
-                                    button:SetDisabled(false)
+                                    button:SetEnabled(true)
                                     addon:UnregisterEvent("TRAIT_CONFIG_UPDATED")
                                     addon:UnregisterEvent("CONFIG_COMMIT_FAILED")
                                 end)
                             end
                         end
                     end)
-                    container:AddChild(button)
                 else
                     local name = self.externalInfo.Talents[talentSet]
-                    local label = AceGUI:Create("Label")
-                    label:SetText("Current Talents are " .. name)
-                    label:SetFont("Fonts\\FRIZQT__.TTF", 16, "OUTLINE")
-                    label:SetRelativeWidth(0.5)
-                    container:AddChild(label)
+                    local label = AF.CreateFontString(container, "Current Talents are " .. name, "white")
+                    AF.SetPoint(label, "TOPLEFT", 0, -25)
                 end
             else
-                local label = AceGUI:Create("Label")
-                label:SetText("Change Specialization")
-                label:SetFont("Fonts\\FRIZQT__.TTF", 16, "OUTLINE")
-                label:SetRelativeWidth(0.5)
-                container:AddChild(label)
+                local label = AF.CreateFontString(container, "Change Specialization", "orange")
+                AF.SetPoint(label, "TOPLEFT", 0, -25)
             end
         end
     else
-        local label = AceGUI:Create("Label")
-        label:SetText("No Talents Manager Found")
-        label:SetFont("Fonts\\FRIZQT__.TTF", 16, "OUTLINE")
-        label:SetFullWidth(true)
-        container:AddChild(label)
+        local label = AF.CreateFontString(container, "No Talents Manager Found", "gray")
+        AF.SetPoint(label, "TOPLEFT", 0, -25)
     end
-    frame:AddChild(container)
     return change
 end
 
 ---Creates the reminder GUI for Gearsets
----@param frame table The AceGUI frame to add elements to
+---@param parent Frame The parent frame to add elements to
 ---@param instanceType string The instance type
 ---@param instance number The instance ID
 ---@return boolean True if gearset needs to be changed
-function addon:createGearsetFrame(frame, instanceType, instance)
+function addon:createGearsetFrame(parent, instanceType, instance)
     local dbLoadouts = self.db.char.loadouts
     local change = false
-    local container = AceGUI:Create("InlineGroup")
-    container:SetLayout("Flow")
-    container:SetFullWidth(true)
-    local header = AceGUI:Create("Label")
-    header:SetText("Gearset:")
-    header:SetFont("Fonts\\FRIZQT__.TTF", 22, "OUTLINE")
-    header:SetRelativeWidth(0.5)
-    container:AddChild(header)
+    
+    local container = AF.CreateTitledPane(parent, "Gearset", parent:GetWidth() - 10, 40)
+    AF.SetPoint(container, "TOPLEFT", 5, -5)
+    
     if next(self.externalInfo.Gearset) then
         local gearSet = dbLoadouts[instanceType][instance].Gearset
         local overrideGearSet = dbLoadouts[instanceType][instance]["Override Default Gearset"]
@@ -258,68 +209,49 @@ function addon:createGearsetFrame(frame, instanceType, instance)
             gearSet = dbLoadouts[instanceType][-1].Gearset
         end
         if gearSet == -1 then
-            local label = AceGUI:Create("Label")
-            label:SetText("Gearset not set")
-            label:SetFont("Fonts\\FRIZQT__.TTF", 16, "OUTLINE")
-            label:SetRelativeWidth(0.5)
-            container:AddChild(label)
+            local label = AF.CreateFontString(container, "Gearset not set", "gray")
+            AF.SetPoint(label, "TOPLEFT", 0, -25)
         else
             local name, _, _, isEquipped = C_EquipmentSet.GetEquipmentSetInfo(gearSet)
             if name and not isEquipped then
                 change = true
-                local button = AceGUI:Create("Button")
-                button:SetText("Change Gearset to " .. name)
-                button:SetRelativeWidth(0.5)
-                button:SetCallback("OnClick", function(widget, callback, mouseButton)
+                local button = AF.CreateButton(container, "Change Gearset to " .. name, "static", parent:GetWidth() - 10, 25)
+                AF.SetPoint(button, "TOPLEFT", 0, -25)
+                button:SetTextHighlightColor(addonName)
+                button:SetBorderHighlightColor(addonName)
+                button:SetOnClick(function()
                     C_EquipmentSet.UseEquipmentSet(gearSet)
-                    container:ReleaseChildren()
-                    header = AceGUI:Create("Label")
-                    header:SetText("Gearset:")
-                    header:SetFont("Fonts\\FRIZQT__.TTF", 22, "OUTLINE")
-                    header:SetRelativeWidth(0.5)
-                    container:AddChild(header)
-                    local label = AceGUI:Create("Label")
-                    label:SetText("Current Gearset is " .. name)
-                    label:SetFont("Fonts\\FRIZQT__.TTF", 16, "OUTLINE")
-                    label:SetRelativeWidth(0.5)
-                    container:AddChild(label)
+                    for _, child in ipairs({container:GetChildren()}) do
+                        child:Hide()
+                    end
+                    
+                    local label = AF.CreateFontString(container, "Current Gearset is " .. name, "white")
+                    AF.SetPoint(label, "TOPLEFT", 0, -25)
                 end)
-                container:AddChild(button)
             elseif isEquipped then
-                local label = AceGUI:Create("Label")
-                label:SetText("Current Gearset is " .. name)
-                label:SetFont("Fonts\\FRIZQT__.TTF", 16, "OUTLINE")
-                label:SetRelativeWidth(0.5)
-                container:AddChild(label)
+                local label = AF.CreateFontString(container, "Current Gearset is " .. name, "white")
+                AF.SetPoint(label, "TOPLEFT", 0, -25)
             end
         end
     else
-        local label = AceGUI:Create("Label")
-        label:SetText("No Gearset Manager Found")
-        label:SetFont("Fonts\\FRIZQT__.TTF", 16, "OUTLINE")
-        label:SetFullWidth(true)
-        container:AddChild(label)
+        local label = AF.CreateFontString(container, "No Gearset Manager Found", "gray")
+        AF.SetPoint(label, "TOPLEFT", 0, -25)
     end
-    frame:AddChild(container)
     return change
 end
 
 ---Creates the reminder GUI for Addons
----@param frame table The AceGUI frame to add elements to
+---@param parent Frame The parent frame to add elements to
 ---@param instanceType string The instance type
 ---@param instance number The instance ID
 ---@return boolean True if addons need to be changed 
-function addon:createAddonsFrame(frame, instanceType, instance)
+function addon:createAddonsFrame(parent, instanceType, instance)
     local dbLoadouts = self.db.char.loadouts
     local change = false
-    local container = AceGUI:Create("InlineGroup")
-    container:SetLayout("Flow")
-    container:SetFullWidth(true)
-    local header = AceGUI:Create("Label")
-    header:SetText("Addons:")
-    header:SetFont("Fonts\\FRIZQT__.TTF", 22, "OUTLINE")
-    header:SetRelativeWidth(0.5)
-    container:AddChild(header)
+    
+    local container = AF.CreateTitledPane(parent, "AddOns", parent:GetWidth() - 10, 40)
+    AF.SetPoint(container, "TOPLEFT", 5, -170)
+    
     if next(self.externalInfo.Addons) then
         local addonSet = dbLoadouts[instanceType][instance].Addons
         local overrideAddonSet = dbLoadouts[instanceType][instance]["Override Default Gearset"]
@@ -327,86 +259,35 @@ function addon:createAddonsFrame(frame, instanceType, instance)
             addonSet = dbLoadouts[instanceType][-1].Addons
         end
         if addonSet == -1 then
-            local label = AceGUI:Create("Label")
-            label:SetText("Addons not set")
-            label:SetFont("Fonts\\FRIZQT__.TTF", 16, "OUTLINE")
-            label:SetRelativeWidth(0.5)
-            container:AddChild(label)
+            local label = AF.CreateFontString(container, "AddOns not set", "gray")
+            AF.SetPoint(label, "TOPLEFT", 0, -25)
         else
             local name = self.manager:getAddonSetName(addonSet)
             local isSetActive = self.manager:isActiveAddonSet(addonSet)
             if not isSetActive then
                 change = true
-                local button = AceGUI:Create("Button")
-                button:SetText("Change Addons to " .. name)
-                button:SetRelativeWidth(0.5)
-                button:SetCallback("OnClick", function(widget, callback, mouseButton)
-                    addon.manager:loadAddons(addonSet)
-                    C_UI.Reload()
+                local button = AF.CreateButton(container, "Change AddOns to " .. name, "static", parent:GetWidth() - 10, 25)
+                AF.SetPoint(button, "TOPLEFT", 0, -25)
+                button:SetTextHighlightColor(addonName)
+                button:SetBorderHighlightColor(addonName)
+                button:SetScript("OnClick", function()
+                    local text = AF.WrapTextInColor("Reload UI now?", "firebrick")
+                    local dialog = AF.GetDialog(parent:GetParent(), text, 200)
+                    AF.SetPoint(dialog, "CENTER", 0, 0)
+                    dialog:SetOnConfirm(function()
+                        addon.manager:loadAddons(addonSet)
+                    end)
                 end)
-                container:AddChild(button)
             else
-                local label = AceGUI:Create("Label")
-                label:SetText("Current Addons are " .. name)
-                label:SetFont("Fonts\\FRIZQT__.TTF", 16, "OUTLINE")
-                label:SetRelativeWidth(0.5)
-                container:AddChild(label)
+                local label = AF.CreateFontString(container, "Current AddOns are " .. name, "white")
+                AF.SetPoint(label, "TOPLEFT", 0, -25)
             end
         end
     else
-        local label = AceGUI:Create("Label")
-        label:SetText("No Addons Manager Found")
-        label:SetFont("Fonts\\FRIZQT__.TTF", 16, "OUTLINE")
-        label:SetFullWidth(true)
-        container:AddChild(label)
+        local label = AF.CreateFontString(container, "No AddOns Manager Found", "gray")
+        AF.SetPoint(label, "TOPLEFT", 0, -25)
     end
-    frame:AddChild(container)
     return change
-end
-
----Creates the Options button in the reminder GUI
----@param frame table The AceGUI frame to add elements to
----@param instanceType string The instance type
----@param instance number The instance ID
-function addon:createChangeOptionsButton(frame, instanceType, instance)
-    local encounter = instance
-    if strfind(instanceType, "Encounter") then
-        instance = strsplit(" ", instanceType)
-        instance = tonumber(instance)
-        instanceType = "Raid"
-    elseif instanceType == "Dungeon" then
-        for _, tierInfo in ipairs(self.instanceGroups.Dungeon) do
-            if tierInfo.instanceIDs then
-                for _, instanceInfo in ipairs(tierInfo.instanceIDs) do
-                    if instanceInfo.instanceID and instanceInfo.instanceID == instance then
-                        instance = tierInfo.tierID
-                        break
-                    end
-                end
-            end
-            if instance ~= encounter then
-                break
-            end
-        end
-    end
-    local container = AceGUI:Create("SimpleGroup")
-    container:SetLayout("Flow")
-    container:SetRelativeWidth(0.25)
-    local button = AceGUI:Create("Button")
-    button:SetText("Loadouts Config")
-    button:SetRelativeWidth(0.5)
-    button:SetHeight(35)
-    button:SetCallback("OnClick", function(widget, callback, mouseButton)
-        AceGUI:Release(addon.frame)
-        addon.frame = nil
-        addon.ConfigView.instanceType = instanceType
-        addon.ConfigView.instance = instance
-        addon.ConfigView.encounter = encounter
-        addon:openConfig()
-    end)
-    frame:AddChild(container)
-    frame:AddChild(button)
-    
 end
 
 ---Shows the reminder window for a specific instance
@@ -416,59 +297,94 @@ function addon:showLoadoutForInstance(instanceType, instance)
     local dbLoadouts = self.db.char.loadouts
     if not dbLoadouts[instanceType] or not dbLoadouts[instanceType][instance] then
         if self.frame then
-            AceGUI:Release(self.frame)
+            self.frame:Hide()
             self.frame = nil
         end
         return
     end
+    
     local frame = self.frame
     if self.frame and self.frameType == "Reminder" then
-        self.frame:ReleaseChildren()
+        for _, child in ipairs({self.frame:GetChildren()}) do
+            child:Hide()
+        end
     else
         if self.frame then
-            AceGUI:Release(self.frame)
+            self.frame:Hide()
             self.frame = nil
         end
         self.frameType = "Reminder"
-        frame = AceGUI:Create("Frame")
-        frame:SetTitle(addonName)
-        frame:SetLayout("Flow")
-        frame:SetWidth(600)
-        frame:SetHeight(425)
-        frame:SetCallback("OnClose", function(widget)
-            AceGUI:Release(widget)
+        frame = AF.CreateHeaderedFrame(AF.UIParent, "InstanceLoadouts_Reminder",
+            addonName, 400, 260)
+        AF.SetPoint(frame, "CENTER")
+        frame:SetTitleColor("white")
+
+        local optionsButton = AF.CreateButton(frame.header, "", addonName, 20, 20)
+        AF.ApplyDefaultBackdropWithColors(optionsButton, "header")
+        AF.SetPoint(optionsButton, "TOPRIGHT", -19, 0)
+
+        optionsButton:SetTexture("OptionsIcon-Brown", {14, 14}, {"CENTER", 0, 0}, true)
+        optionsButton:SetFrameLevel(frame:GetFrameLevel() + 10)
+        optionsButton:SetOnClick(function()
+            local encounter = instance
+            if strfind(instanceType, "Encounter") then
+                local instanceStr = strsplit(" ", instanceType)
+                instance = tonumber(instanceStr)
+                instanceType = "Raid"
+            elseif instanceType == "Dungeon" then
+                for _, tierInfo in ipairs(addon.instanceGroups.Dungeon) do
+                    if tierInfo.instanceIDs then
+                        for _, instanceInfo in ipairs(tierInfo.instanceIDs) do
+                            if instanceInfo.instanceID and instanceInfo.instanceID == instance then
+                                instance = tierInfo.tierID
+                                break
+                            end
+                        end
+                    end
+                    if instance ~= encounter then
+                        break
+                    end
+                end
+            end
+            
+            if addon.frame then
+                addon.frame:Hide()
+                addon.frame = nil
+            end
+            addon.ConfigView.instanceType = instanceType
+            addon.ConfigView.instance = instance
+            addon.ConfigView.encounter = encounter
+            addon:openConfig()
+        end)
+        
+        frame:SetScript("OnHide", function()
             self.frame = nil
         end)
+
+        _G["InstanceLoadouts_Reminder"] = frame
+        table.insert(UISpecialFrames, "InstanceLoadouts_Reminder")
     end
     
-    local header = AceGUI:Create("Label")
-    header:SetText(self.ConvertIDToName[instance])
-    header:SetFullWidth(true)
-    header:SetFont("Fonts\\FRIZQT__.TTF", 30, "OUTLINE")
-    frame:AddChild(header)
+    local header = AF.CreateFontString(frame, self.ConvertIDToName[instance], "white", "IL_HEADER_FONT")
+    AF.SetPoint(header, "TOP", 0, -5)
 
-    local scrollContainer = AceGUI:Create("SimpleGroup")
-    scrollContainer:SetFullWidth(true)
-    scrollContainer:SetFullHeight(true)
-    scrollContainer:SetLayout("Fill")
-    frame:AddChild(scrollContainer)
-    local scroll = AceGUI:Create("ScrollFrame")
-    scroll:SetLayout("Flow")
-    scrollContainer:AddChild(scroll)
-
-    local gearsetChange = self:createGearsetFrame(scroll, instanceType, instance)
-    local specializationChange = self:createSpecializationFrame(scroll, instanceType, instance)
-    local talentsChange = self:createTalentsFrame(scroll, instanceType, instance)
-    local addonsChange = self:createAddonsFrame(scroll, instanceType, instance)
-    self:createChangeOptionsButton(scroll, instanceType, instance)
+    local box = AF.CreateBorderedFrame(frame, nil, frame:GetWidth() - 10, frame:GetHeight() - 35, "background2", "black")
+    AF.SetPoint(box, "TOPLEFT", 5, -30)
+    
+    local gearsetChange = self:createGearsetFrame(box, instanceType, instance)
+    local specializationChange = self:createSpecializationFrame(box, instanceType, instance)
+    local talentsChange = self:createTalentsFrame(box, instanceType, instance)
+    local addonsChange = self:createAddonsFrame(box, instanceType, instance)
 
     self.frame = frame
 
     if not specializationChange and not talentsChange and not gearsetChange and not addonsChange then
         if self.frame then
-            AceGUI:Release(self.frame)
+            self.frame:Hide()
             self.frame = nil
         end
+    else
+        frame:Show()
     end
 end
 
@@ -497,6 +413,7 @@ end
 ---@param instanceID number The instance ID to check
 ---@param encounterIDs table The encounter IDs to check against
 function addon:checkIfTrackedTarget(instanceID, encounterIDs)
+    if InCombatLockdown() then return end
     local dbLoadouts = self.db.char.loadouts
     if not encounterIDs then
         return

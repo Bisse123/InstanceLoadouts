@@ -1,301 +1,41 @@
 local addonName, addon = ...
 
--- Add addon functions to global table
 _G[addonName] = addon
 
--- create addon in AceAddon environment
 LibStub("AceAddon-3.0"):NewAddon(addon, addonName, "AceConsole-3.0", "AceEvent-3.0", "AceHook-3.0")
 
--- Ace3 libs
-local AceGUI = LibStub("AceGUI-3.0")
-local AceConfig = LibStub("AceConfig-3.0")
-local AceConfigDialog = LibStub("AceConfigDialog-3.0")
+local AF = _G.AbstractFramework
 
 local LibSerialize = LibStub("LibSerialize")
 local LibDeflate = LibStub("LibDeflate")
 
-local changelogTable
-local updatedChangelog
-
-local function createChangelog()
-    local orderCount = CreateCounter(1)
-    local versionCount = CreateCounter(1)
-    local function versionChanges(name, changes)
-        local change = {
-            order = orderCount(),
-            name = name,
-            type = "group",
-            inline = true,
-        }
-        local args = {}
-        for idx, text in ipairs(changes) do
-            local change = {
-                order = orderCount(),
-                name = "- " .. text,
-                type = "description",
-                fontSize = "medium",
-            }
-            args["versionChange" .. idx] = change
-        end
-        change.args = args
-        return change
-    end
-    local changelog = {
-        name = addonName .. " Changelog",
-        type = "group",
-        args = {
-            changelogHeader = {
-                order = orderCount(),
-                name = "Changelog",
-                type = "description",
-                fontSize = "large",
-            },
-            ["version" .. versionCount()] = 
-                versionChanges("Version 2.1.5", {
-                    "Added a timeout on reminders showing again for the same targeted NPC (default with no timeout)",
-                    "Fixed configs updating on deleted talent loadouts",
-                    "Added Manaforge Omega NPC IDs",
-                    "Added Season 3 Delves",
-                    "Loadout reminder now only appears when targeting living NPCs",
-            }),
-            ["version" .. versionCount()] = 
-                versionChanges("Version 2.1.4", {
-                    "Chrome King Gallywix npcID fixed",
-                    "Export frame fix",
-                    "Fixed issue with wrongfully telling to swap talents after swapping specialization",
-                    "Added safety check in reminder logic",
-            }),
-            ["version" .. versionCount()] = 
-                versionChanges("Version 2.1.3", {
-                    "More frames fixes",
-            }),
-            ["version" .. versionCount()] = 
-                versionChanges("Version 2.1.2", {
-                    "Changes in the Blizzard Options panel",
-                    "Renamed Custom Groups to Custom Instances",
-                    "Fixed frames repositioning after certain actions",
-                    "Fixed frames not closing properly",
-            }),
-            ["version" .. versionCount()] = 
-                versionChanges("Version 2.1.1", {
-                    "Added Garrison IDs to make them work as Open World",
-            }),
-            ["version" .. versionCount()] = 
-                versionChanges("Version 2.1.0", {
-                    "Added support for Simple Addon Manager. Does not currently support the import/export feature.",
-            }),
-            ["version" .. versionCount()] = 
-                versionChanges("Version 2.0.2", {
-                    "Fixed issue when entering a raid that is not being tracked",
-                    "Fixed issue caused when saving, deleting or changing gearsets",
-                    "Fixed a bug which occured if a player removed an encounter from custom groups while being inside the instance of that encounter",
-                    "Changed name of button in reminder from Options to Loadouts Config",
-                    "Fixed Loadouts Config button in reminder for dungeons and raids",
-            }),
-            ["version" .. versionCount()] = 
-                versionChanges("Version 2.0.1", {
-                    "Fixed Raid Loadouts",
-            }),
-            ["version" .. versionCount()] = 
-                versionChanges("Version 2.0.0", {
-                    "NEW FEATURE: Custom groups -> Add Loadouts for any Dungeon or Raid from the Encounter Journal",
-                    "NOTE: When adding a custom Raid remember to input npcIDs for each boss if you wish to get reminded to swap loadouts for that boss",
-                    "Added button in Encounter Journal to add custom instances to loadouts",
-                    "Now uses IDs instead of names for tracking, this means it now works for non english users",
-                    "Converted database from names to IDs",
-                    "Default instances will always be current season (Not considered custom groups so cannot be removed)",
-                    "Created Custom Groups Config window to remove custom instances from loadouts",
-                    "Changed the UI to be better suited for custom groups",
-                    "Dungeon groups will all share the same Default Loadout",
-                    "Duplicate Dungeons will share the same Loadout",
-                    "Export now includes custom groups",
-                    "Import now includes custom groups and will use appropiate Locale names",
-            }),
-            ["version" .. versionCount()] = 
-                versionChanges("Version 1.0.1", {
-                    "Added Better Addon List as an Addon Manager. Does not currently support the import/export feature.",
-                    "Swapping between Addon Managers will reset the addon loadouts each time",
-            }),
-            ["version" .. versionCount()] = 
-                versionChanges("Version 1.0.0", {
-                    "Added option to automatically show changelog on new update (Enabled by default)",
-                    "Added feature to import Addons/Talents loadouts (/il import)",
-                    "Added feature to Export Addons/Talents loadouts (/il export)",
-                    "Importing/Exporting addon loadouts requires an Addon manager",
-                    "Importing/Exporting talents loadouts requires a Talent manager",
-                    "Restructure of codebase",
-            }),
-            ["version" .. versionCount()] = 
-                versionChanges("Version 0.1.0", {
-                    "Added Changelog window (/il log)",
-                    "Added loadouts for Delves",
-                    "Added loadouts for Arenas",
-                    "Added loadouts for Battlegrounds",
-                    "Added scroll container to options config window",
-                    "Added scroll container to reminder window",
-                    "Fixed bug with Operation: Mechagon - Workshop not showing loadout when entering dungeon",
-                    "Ensured that only one GUI element can be open at a time",
-            }),
-            ["version" .. versionCount()] = 
-                versionChanges("Version 0.0.1", {
-                    "Fixed a bug when turning off override spec but still having override talents on where it would choose the talent override instead of the default",
-            }),
-            ["version" .. versionCount()] = 
-                versionChanges("Version 0.0.0", {
-                    "Initial release",
-            }),
-        },
-    }
-    return changelog
-end
+local _, UNIT_CLASS = UnitClass("player")
+AF.RegisterAddon(addonName)
+AF.SetAddonAccentColor(
+    addonName,
+    AF.GetColorHex(UNIT_CLASS),
+    {0.15, 0.15, 0.15, 1},
+    AF.GetColorHex(UNIT_CLASS, 0.7)
+)
+AF.AddColor("background", {0.024, 0.024, 0.031, 0.75})
+AF.AddColor("background2", {0.024, 0.024, 0.031, 0.3})
+AF.CreateFont(addonName, "IL_HEADER_FONT", nil, 18, "OUTLINE", nil, "white", "CENTER", "MIDDLE")
 
 ---Shows the changelog window
-function addon:showChangelog()
-    self.frameType = "Changelog"
-    AceConfigDialog:Open(addonName .. "-Changelog")
-end
-
----Toggles the changelog window open/closed
-function addon:toggleChangelog()
-    if updatedChangelog then
-        AceGUI:Release(addon.frame)
-        addon.frame = nil
-    elseif AceConfigDialog.OpenFrames[addonName .. "-Changelog"] then
-        AceConfigDialog:Close(addonName .. "-Changelog")
-        addon.frame = nil
-    else
-        if addon.frame then
-            AceGUI:Release(addon.frame)
-            addon.frame = nil
-        end
-        addon:showChangelog()
-    end
-end
-
--- Creates blizzard options tab
-local function createBlizzOptions()
-    local orderCount = CreateCounter(1)
-    local nextSpace = 1
-    local function newSpace()
-        nextSpace = nextSpace + 1
-        return {
-            order = orderCount(),
-            name = " ",
-            type = "description",
-            fontSize = "large",
-        }
-    end
-    local function showManagers(managers)
-        local args = {}
-        for _, name in pairs(managers) do
-            local arg = {
-                order = orderCount(),
-                name = "- " .. name,
-                type = "description",
-                fontSize = "medium",
-            }
-            args[name] = arg
-        end
-        return args
-    end
-    local aboutTable = {
-        name = addonName,
-        type = "group",
-        handler = addon,
-        args = {
-            -- About the addon
-            author = {
-                order = orderCount(),
-                name = "Author: " .. C_AddOns.GetAddOnMetadata(addonName, "Author"),
-                type = "description",
-                fontSize = "large",
-            },
-            version = {
-                order = orderCount(),
-                name = "Version: " .. C_AddOns.GetAddOnMetadata(addonName, "Version"),
-                type = "description",
-                fontSize = "large",
-            },
-            patch = {
-                order = orderCount(),
-                name = "Patch: " .. C_AddOns.GetAddOnMetadata(addonName, "X-Patch"),
-                type = "description",
-                fontSize = "large",
-            },
-            discord = {
-                order = orderCount(),
-                name = "Discord link",
-                type = "input",
-                width = 1.2,
-                get = function()
-                    return "https://discord.gg/esUtXwdQ"
-                end,
-                cmdHidden = true,
-            },
-            ["space" .. nextSpace] = newSpace(),
-            slashCommandHeader = {
-                order = orderCount(),
-                name = "Slash commands",
-                type = "description",
-                fontSize = "large",
-            },
-            slashCommand = {
-                order = orderCount(),
-                name = "/instanceloadouts\n/il",
-                type = "description",
-                fontSize = "medium",
-            },
-            ["space" .. nextSpace] = newSpace(),
-            externalsAddonsHeader = {
-                order = orderCount(),
-                name = "Supported Addon Managers",
-                type = "description",
-                fontSize = "large",
-            },
-            externalsAddonsText = {
-                order = orderCount(),
-                name = "",
-                type = "group",
-                inline = true,
-                args = showManagers(addon:getSupportedAddonManagers())
-            },
-            ["space" .. nextSpace] = newSpace(),
-            externalsTalentHeader = {
-                order = orderCount(),
-                name = "Supported Talent Managers",
-                type = "description",
-                fontSize = "large",
-            },
-            externalsTalentText = {
-                order = orderCount(),
-                name = "",
-                type = "group",
-                inline = true,
-                args = showManagers(addon:getSupportedTalentManagers())
-            },
-        }
-    }
-    return aboutTable
+---@param onCloseCallback function|nil Optional callback to execute when the window closes
+function addon:showChangelog(onCloseCallback)
+    addon:openChangelog(onCloseCallback)
 end
 
 ---Shows general addon options/information
 function addon:showOptions()
-    self.frameType = "Options"
-    AceConfigDialog:Open(addonName)
+    self:openConfig()
 end
 
 ---Toggles the options window open/closed 
-function addon:toggleOptions()
-    if AceConfigDialog.OpenFrames[addonName] then
-        AceConfigDialog:Close(addonName)
-        addon.frame = nil
-    else
-        if addon.frame then
-            AceGUI:Release(addon.frame)
-            addon.frame = nil
-        end
-        addon:showOptions()
-    end
+---@param onCloseCallback function|nil Optional callback to execute when the window closes
+function addon:toggleOptions(onCloseCallback)
+    self:openOptions(onCloseCallback)
 end
 
 local optionFunctions = {
@@ -308,196 +48,30 @@ local optionFunctions = {
 }
 
 ---Executes the specified options function
----@param info table The options info table
+---@param info table The options info table  
 ---@param button string The button pressed
 function addon:executeOptionsFunction(info, button)
-    if AceConfigDialog.OpenFrames[addonName] then
-        AceConfigDialog:Close(addonName)
-    end
-    if AceConfigDialog.OpenFrames[addonName .. "-Changelog"] then
-        AceConfigDialog:Close(addonName .. "-Changelog")
-    end
     if self.frame then
-        AceGUI:Release(self.frame)
+        self.frame:Hide()
+        self.frame = nil
     end
     optionFunctions[info.option.name]()
 end
 
-local function createOptionstable()
-    local orderCount = CreateCounter(1)
-    local nextSpace = 1
-    local function newSpace()
-        nextSpace = nextSpace + 1
-        return {
-            order = orderCount(),
-            name = " ",
-            type = "description",
-            fontSize = "large",
-        }
-    end
-    local optionsTable = {
-        name = addonName .. " Options",
-        type = "group",
-        handler = addon,
-        args = {
-            options = {
-                order = orderCount(),
-                name = "Options",
-                type = "execute",
-                desc = "Open Options",
-                func = "executeOptionsFunction",
-                guiHidden = true,
-            },
-            o = {
-                order = orderCount(),
-                name = "Options",
-                type = "execute",
-                desc = "Open Options",
-                func = "executeOptionsFunction",
-                guiHidden = true,
-            },
-            changelogHeader = {
-                order = orderCount(),
-                name = "Changelog",
-                type = "description",
-                fontSize = "large",
-            },
-            changelog = {
-                order = orderCount(),
-                name = "Changelog",
-                type = "execute",
-                desc = "Open Changelog",
-                func = "executeOptionsFunction",
-            },
-            log = {
-                order = orderCount(),
-                name = "Changelog",
-                type = "execute",
-                desc = "Open Changelog",
-                func = "executeOptionsFunction",
-                guiHidden = true,
-            },
-            autoShowChangelog = {
-                order = orderCount(),
-                name = "Auto show changelog on update",
-                type = "toggle",
-                desc = "Automatically show changelog when new update is detected",
-                width = 2,
-                set = function (info, val)
-                    addon.db.global.autoShowChangelog = val
-                end,
-                get = function(info)
-                    return addon.db.global.autoShowChangelog
-                end,
-            },
-            ["space" .. nextSpace] = newSpace(),
-            ImportExport = {
-                order = orderCount(),
-                name = "Import/Export loadouts",
-                type = "description",
-                fontSize = "large",
-            },
-            import = {
-                order = orderCount(),
-                name = "Import",
-                type = "execute",
-                desc = "Import Loadout",
-                func = "executeOptionsFunction",
-            },
-            export = {
-                order = orderCount(),
-                name = "Export",
-                type = "execute",
-                desc = "Export Loadout",
-                func = "executeOptionsFunction",
-            },
-            ["space" .. nextSpace] = newSpace(),
-            customGroupsHeader = {
-                order = orderCount(),
-                name = "Manage Custom Instances",
-                type = "description",
-                fontSize = "large",
-            },
-            custominstance = {
-                order = orderCount(),
-                name = "Custom Instances",
-                type = "execute",
-                desc = "Open Custom Instances",
-                func = "executeOptionsFunction",
-            },
-            ci = {
-                order = orderCount(),
-                name = "Custom Instances",
-                type = "execute",
-                desc = "Open Custom Instances",
-                func = "executeOptionsFunction",
-                guiHidden = true,
-            },
-            ["space" .. nextSpace] = newSpace(),
-            OptionsHeader = {
-                order = orderCount(),
-                name = "Configure Loadouts",
-                type = "description",
-                fontSize = "large",
-            },
-            config = {
-                order = orderCount(),
-                name = "Loadouts",
-                type = "execute",
-                desc = "Open Loadouts",
-                func = "executeOptionsFunction",
-            },
-            c = {
-                order = orderCount(),
-                name = "Loadouts",
-                type = "execute",
-                desc = "Open Loadouts",
-                func = "executeOptionsFunction",
-                guiHidden = true,
-            },
-            ["space" .. nextSpace] = newSpace(),
-            ExtraOptionsHeader = {
-                order = orderCount(),
-                name = "Extra Options",
-                type = "description",
-                fontSize = "large",
-            },
-            targetTimeout = {
-                order = orderCount(),
-                name = "Target timeout (seconds)",
-                type = "range",
-                desc = "Time in seconds before loadout reminder can show again for the same target",
-                min = 0,
-                max = 120,
-                step = 5,
-                width = 1.5,
-                set = function (info, val)
-                    addon.db.global.targetTimeout = val
-                end,
-                get = function(info)
-                    return addon.db.global.targetTimeout or 0
-                end,
-            },
-        }
-    }
-    return optionsTable
-end
-
 ---Creates an "Open Options" button and container for the given frame
----@param frame table The AceGUI frame to add the button to
-function addon:createOptionsButton(frame)
-    local container = AceGUI:Create("SimpleGroup")
-    container:SetLayout("Flow")
-    container:SetRelativeWidth(0.25)
-    frame:AddChild(container)
-    local button = AceGUI:Create("Button")
-    button:SetText("Open Options")
-    button:SetRelativeWidth(0.5)
-    button:SetCallback("OnClick", function(widget, callback)
-        AceGUI:Release(frame)
+---@param parent Frame The parent frame to add the button to
+function addon:createOptionsButton(parent)
+    local container = AF.CreateFrame(parent, nil, 200, 50)
+    AF.SetPoint(container, "TOPLEFT", 10, -10)
+    
+    local button = AF.CreateButton(container, "Open Options", addonName, 150, 30)
+    AF.SetPoint(button, "TOPLEFT", 0, 0)
+    button:SetOnClick(function()
+        if parent and parent.Hide then
+            parent:Hide()
+        end
         self:toggleOptions()
     end)
-    frame:AddChild(button)
 end
 
 function addon:convertDB()
@@ -537,28 +111,6 @@ function addon:convertDB()
         end
     end
 end
-
--- Generates the database default profile
--- self.db.char.loadouts = {
---     ["Dungeon / Raid / Open World"] = {
---         ["Default"] = {
---             ["Specialization"] = -1,
---             ["Talents"] = -1,
---             ["Gearset"] = -1,
---             ["Addons"] = -1,
---         },
---         ["Dungeon Instance / Raid Boss"] = {
---             ["Override Default Specialization"] = false,
---             ["Specialization"] = -1,
---             ["Override Default Talents"] = false,
---             ["Talents"] = -1,
---             ["Override Default Gearset"] = false,
---             ["Gearset"] = -1,
---             ["Override Default Addons"] = false,
---             ["Addons"] = -1,
---         },
---     }
--- }
 
 ---Generates default options for the global database
 ---@return table The global defaults table
@@ -691,10 +243,12 @@ function addon:InitData()
             return
         end
         local oldChangelog = self.db.global.changelog
-        local serializedhangelog = LibSerialize:Serialize(changelogTable)
-        local compressedhangelog = LibDeflate:CompressDeflate(serializedhangelog)
-        local encodedChangelog = LibDeflate:EncodeForPrint(compressedhangelog)
+
+        local serializedChangelog = LibSerialize:Serialize(addon:GetChangelog())
+        local compressedChangelog = LibDeflate:CompressDeflate(serializedChangelog)
+        local encodedChangelog = LibDeflate:EncodeForPrint(compressedChangelog)
         local newChangelog = LibDeflate:Adler32(encodedChangelog)
+
         self.db.global.changelog = newChangelog
         if oldChangelog and oldChangelog == newChangelog then
             self:checkIfIsTrackedInstance()
@@ -704,16 +258,9 @@ function addon:InitData()
             self:checkIfIsTrackedInstance()
             return
         end
-        local frame = AceGUI:Create("Frame")
-        updatedChangelog = true
-        frame:SetCallback("OnClose", function(widget)
-            AceGUI:Release(widget)
-            self.frame = nil
-            updatedChangelog = false
+        self:showChangelog(function()
             self:checkIfIsTrackedInstance()
         end)
-        self.frame = frame
-        AceConfigDialog:Open(addonName .. "-Changelog", self.frame)
     end)
     self:RegisterEvent("ACTIVE_DELVE_DATA_UPDATE", function()
         addon:checkIfIsTrackedInstance()
@@ -727,7 +274,7 @@ function addon:InitData()
         end)
     end)
     self:populateExternalInfo()
-    
+
     self:RegisterEvent("ADDON_LOADED", function(event, name)
         if name == "Blizzard_EncounterJournal" then
             self:CreateInstanceButtons()
@@ -750,14 +297,6 @@ function addon:OnInitialize()
     }
     self.db = LibStub("AceDB-3.0"):New("InstanceLoadoutsDB", globalDefaults)
 
-    local aboutTable = createBlizzOptions()
-    AceConfig:RegisterOptionsTable(addonName .. "-About", aboutTable)
-    AceConfigDialog:AddToBlizOptions(addonName .. "-About", addonName)
-    local optionsTable = createOptionstable()
-    AceConfig:RegisterOptionsTable(addonName, optionsTable, {"instanceloadouts", "il"})
-    AceConfigDialog:AddToBlizOptions(addonName, "Options", addonName)
-    changelogTable = createChangelog()
-    AceConfig:RegisterOptionsTable(addonName .. "-Changelog", changelogTable)
     self:RegisterEvent("PLAYER_LOGIN", function()
         if not GetSpecialization() or GetSpecialization() == 5 then
             self:Print("No specialization found")
@@ -772,4 +311,30 @@ function addon:OnInitialize()
         end
         self:InitData()
     end)
+end
+
+SLASH_INSTANCELOADOUTS1 = "/instanceloadouts"
+SLASH_INSTANCELOADOUTS2 = "/il"
+SlashCmdList["INSTANCELOADOUTS"] = function(msg)
+    local command = strlower(msg or "")
+    
+    if command == "config" or command == "c" then
+        addon:toggleConfig()
+    elseif command == "changelog" or command == "log" then
+        addon:toggleChangelog()
+    elseif command == "import" then
+        addon:toggleImport()
+    elseif command == "export" then
+        addon:toggleExport()
+    elseif command == "options" or command == "o" then
+        addon:toggleOptions()
+    elseif command == "custominstance" or command == "ci" then
+        addon:toggleCustomInstanceUI()
+    elseif command == "target" or command == "t" then
+        -- Manual target testing for reminder system
+        addon:checkIfIsTrackedInstance()
+    else
+        -- Show help/default action
+        addon:toggleOptions()
+    end
 end
