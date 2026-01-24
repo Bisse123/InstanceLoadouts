@@ -30,7 +30,7 @@ end
 ---@param yOffset number The y offset for positioning
 ---@return number newYOffset The new y offset after adding elements
 local function CreateImportExportOptions(parent, yOffset)
-    local importExportPane = AF.CreateTitledPane(parent, "Import/Export Loadouts", parent:GetWidth() - 10, 80)
+    local importExportPane = AF.CreateTitledPane(parent, "Import/Export Loadouts - disabled for now", parent:GetWidth() - 10, 80)
     AF.SetPoint(importExportPane, "TOPLEFT", 5, yOffset)
 
     local importButton = AF.CreateButton(importExportPane, "Import Loadouts", addonName, 150, 25)
@@ -38,12 +38,14 @@ local function CreateImportExportOptions(parent, yOffset)
     importButton:SetOnClick(function()
         addon:toggleImport()
     end)
+    importButton:SetEnabled(false)
 
     local exportButton = AF.CreateButton(importExportPane, "Export Loadouts", addonName, 150, 25)
     AF.SetPoint(exportButton, "TOPLEFT", importButton, "TOPRIGHT", 5, 0)
     exportButton:SetOnClick(function()
         addon:toggleExport()
     end)
+    exportButton:SetEnabled(false)
 
     return yOffset - 60
 end

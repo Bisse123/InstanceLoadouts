@@ -322,10 +322,10 @@ SlashCmdList["INSTANCELOADOUTS"] = function(msg)
         addon:toggleConfig()
     elseif command == "changelog" or command == "log" then
         addon:toggleChangelog()
-    elseif command == "import" then
-        addon:toggleImport()
-    elseif command == "export" then
-        addon:toggleExport()
+    -- elseif command == "import" then
+    --     addon:toggleImport()
+    -- elseif command == "export" then
+    --     addon:toggleExport()
     elseif command == "options" or command == "o" then
         addon:toggleOptions()
     elseif command == "custominstance" or command == "ci" then
