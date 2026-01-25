@@ -1,16 +1,9 @@
 package-as: InstanceLoadouts
 
 externals:
-    Libs/AbstractFramework:
-        url: https://github.com/enderneko/AbstractFramework.git
-        tag: latest
-        curse-slug: abstract-framework
     Libs/LibStub: https://repos.wowace.com/wow/ace3/trunk/LibStub
     Libs/LibDeflate: https://github.com/SafeteeWoW/LibDeflate
     Libs/LibSerialize: https://github.com/rossnichols/LibSerialize
-
-move-folders:
-    InstanceLoadouts/Libs/AbstractFramework: AbstractFramework
 
 required-dependencies:
     - abstract-framework
