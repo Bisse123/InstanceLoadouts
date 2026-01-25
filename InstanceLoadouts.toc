@@ -1,15 +1,18 @@
-## Interface: 120000,120001
-## Version: 2.1.5
+## Interface: @toc-version-retail@
+
+## Version: @project-version@
 ## Title: Instance Loadouts
 ## Notes: Reminds you to change specialization, talents, gear set and addons
-## Author: Bisse
+## Author: Bisse, Swirl
 ## IconTexture: Interface\AddOns\InstanceLoadouts\Media\Icons\IL.tga
-## X-Patch: The War Within 11.2
-## X-Curse-Project-ID: 1235057
-## X-Wago-ID: 4N2m0QGL
 ## SavedVariables: InstanceLoadoutsDB
+
 ## Dependencies: AbstractFramework
 ## OptionalDeps: ACP, BetterAddonList, SimpleAddonManager, TalentLoadoutManager, WowUnit
+
+## X-Curse-Project-ID: 1235057
+## X-Wago-ID: 4N2m0QGL
+
 ## Category-enUS: Dungeons & Raids
 ## Category-deDE: Dungeons & Schlachtzüge
 ## Category-esES: Mazmorras y bandas
