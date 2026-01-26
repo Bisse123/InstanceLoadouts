@@ -1,5 +1,6 @@
 local addonName, addon = ...
 
+---@type AbstractFramework
 local AF = _G.AbstractFramework
 
 local isGarrison = {

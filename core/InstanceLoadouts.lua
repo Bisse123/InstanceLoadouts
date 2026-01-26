@@ -4,6 +4,7 @@ _G[addonName] = addon
 
 LibStub("AceAddon-3.0"):NewAddon(addon, addonName, "AceConsole-3.0", "AceEvent-3.0", "AceHook-3.0")
 
+---@type AbstractFramework
 local AF = _G.AbstractFramework
 
 local LibSerialize = LibStub("LibSerialize")
