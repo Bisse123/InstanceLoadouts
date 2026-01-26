@@ -5,5 +5,26 @@ externals:
     Libs/LibDeflate: https://github.com/SafeteeWoW/LibDeflate
     Libs/LibSerialize: https://github.com/rossnichols/LibSerialize
 
+    # AbstractFramework deps (https://github.com/enderneko/AbstractFramework/blob/main/.pkgmeta)
+    AF/AbstractFramework:
+        url: https://github.com/enderneko/AbstractFramework.git
+        tag: latest
+        curse-slug: abstract-framework
+    AF/Libs/LibStub: https://repos.curseforge.com/wow/libstub/trunk
+    AF/Libs/CallbackHandler-1.0: https://repos.curseforge.com/wow/callbackhandler/trunk/CallbackHandler-1.0
+    AF/Libs/AceComm-3.0: https://repos.curseforge.com/wow/ace3/trunk/AceComm-3.0
+    AF/Libs/LibSerialize: https://github.com/rossnichols/LibSerialize
+    AF/Libs/LibDeflate: https://github.com/SafeteeWoW/LibDeflate
+    AF/Libs/LibCustomGlow-1.0: https://github.com/Stanzilla/LibCustomGlow
+    AF/Libs/LibSharedMedia-3.0: https://repos.curseforge.com/wow/libsharedmedia-3-0/trunk/LibSharedMedia-3.0
+    AF/Libs/LibDataBroker-1.1: https://github.com/tekkub/libdatabroker-1-1
+    AF/Libs/LibDBIcon-1.0: https://repos.curseforge.com/wow/libdbicon-1-0/trunk/LibDBIcon-1.0
+    AF/Libs/TaintLess:
+        url: https://www.townlong-yak.com/addons.git/taintless
+        commit: default
+
+move-folders:
+    InstanceLoadouts/AF/AbstractFramework: AbstractFramework
+
 required-dependencies:
     - abstract-framework
