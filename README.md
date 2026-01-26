@@ -2,7 +2,7 @@
 
 Never forget to change your specialization, talents, gear, or addon presets ever again!
 
-**Note:** Requires [AbstractFramework](https://www.curseforge.com/wow/addons/abstract-framework). Installed automatically via CurseForge, but must be added manually on WoWUp and Wago.
+**Note:** Requires [_AbstractFramework_](https://www.curseforge.com/wow/addons/abstract-framework) in order to function. Installed automatically with _Instance Loadouts_.
 
 ## Features
 
