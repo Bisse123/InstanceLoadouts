@@ -1,11 +1,13 @@
 # InstanceLoadouts
- Reminds you to change specialization, talents, gear set and addons
 
-Never forget to change your specialization, talents, gear or addon presets ever again
+Never forget to change your specialization, talents, gear, or addon presets ever again!
 
-With InstanceLoadouts you can create loadouts for each instance and the addon will remind you to change specialization, talents, gear and addon.
+**Note:** Requires [AbstractFramework](https://www.curseforge.com/wow/addons/abstract-framework). Installed automatically via CurseForge, but must be added manually on WoWUp and Wago.
 
-currently supports
+## Features
+
+Create custom loadouts for each instance type. The addon will remind you to switch your spec, talents, equipment set, and addon profile when entering:
+
 - Dungeons
 - Raids
 - Delves
@@ -13,42 +15,34 @@ currently supports
 - Battlegrounds
 - Open World
 
-By Default the current season dungeons and raids will be tracked, It is possible to add other instances of dungeons and raids from the encounter Journal. However if you add a raid encounter then it does require you to manually input the npcIDs that you want to track for the reminder to show.
+Current season dungeons and raids are tracked by default. You can add other instances from the Encounter Journal. Custom raid encounters require manually entering NPC IDs.
 
-Share loadouts with friends and guildies using the Import/Export feature
+Share your loadouts using the built-in import/export feature.
 
-Supported Addon Managers
+## Compatibility
+
+**Addon Managers**
 - [Addon Control Panel](https://www.curseforge.com/wow/addons/acp)
 - [Better Addon List](https://www.curseforge.com/wow/addons/betteraddonlist)
 - [Simple Addon Manager](https://www.curseforge.com/wow/addons/simple-addon-manager)
 
-Supported Talent Managers
+**Talent Managers**
 - [Talent Loadout Manager](https://www.curseforge.com/wow/addons/talent-loadout-manager)
-- Default talents
+- Default Blizzard talents
 
-Supported Gearset Managers
-- Default equipments
+**Equipment**
+- Default Blizzard equipment manager
 
+## Commands
 
-SlashCommands
-- /instanceloadout
-    - config - Opens config UI
-    - c - Opens config UI
-    - changelog - Show changelog
-    - log - Show changelog
-    - import - Import loadout
-    - export - Export loadout
-- /il
-    - config - Opens config UI
-    - c - Opens config UI
-    - changelog - Show changelog
-    - log - Show changelog
-    - import - Import loadout
-    - export - Export loadout
+**`/instanceloadout` or `/il`**
+- `config` or `c` - Open configuration UI
+- `changelog` or `log` - Show changelog
+- `import` - Import a loadout
+- `export` - Export a loadout
 
+## Planned Features
 
-
-TODO:
-- Class specific loadouts
-- Option to use character or class specific loadout
+- Class-specific loadouts
+- Toggle between character and class-wide loadouts
 
