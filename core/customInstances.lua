@@ -170,7 +170,6 @@ function addon:CreateInstanceButtons()
             title = EncounterJournal.instanceSelect.Title:GetText()
             addButton:SetText("Instance Loadouts Add:\n" .. currentTierName .. " " .. title)
             local width = addButton.text:GetStringWidth() + 25
-            print(addButton.text:GetStringWidth())
             addButton:SetWidth(width)
             addButton:Show()
         else
