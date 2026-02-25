@@ -199,6 +199,8 @@ local function isActiveSAMAddonSet(addonSet)
 
     local charGuid = SAM:GetLoggedCharGuid()
     local initialState = SAM:GetAddonsInitialState(charGuid)
+    if not initialState then return false end
+    
     local samLock = SAM:GetModule("Lock")
     local activeAddons = activeSAMAddons(addonSet)
     for idx = 1, C_AddOns.GetNumAddOns() do
