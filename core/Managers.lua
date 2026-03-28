@@ -182,6 +182,8 @@ local function isActiveSAMAddonSet(addonSet)
             checkedAddonSets[setName] = true
             local addons = {}
             local activeSet = SAM:GetDb().sets[setName]
+            if not activeSet then return addons end
+            
             local activeAddons = activeSet.addons
             for addonName, _ in pairs(activeAddons) do
                 tinsert(addons, addonName)
