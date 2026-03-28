@@ -1,4 +1,4 @@
-## Interface: @toc-version-retail@
+## Interface: 120001, 120000
 
 ## Version: @project-version@
 ## Title: Instance Loadouts
