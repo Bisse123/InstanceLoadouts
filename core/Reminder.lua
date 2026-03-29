@@ -389,64 +389,9 @@ function addon:showLoadoutForInstance(instanceType, instance)
     end
 end
 
---Checks if within timeout period to avoid multiple popups
----@return boolean True if within timeout
-function addon:checkTimeout()
-    local timeout = self.db.global.targetTimeout
-    local currentTime = GetTime()
-    
-    if self.lastCheckTime and (currentTime - self.lastCheckTime) < timeout then
-        return true
-    end
-    
-    self.lastCheckTime = currentTime
-    return false
-end
-
----Checks if target is a tracked raid boss
----@param instanceID number The instance ID to check
----@param encounterIDs table The encounter IDs to check against
-function addon:checkIfTrackedTarget(instanceID, encounterIDs)
-    if InCombatLockdown() then return end
-    local dbLoadouts = self.db.char.loadouts
-    if not encounterIDs then
-        return
-    end
-    local guid = UnitGUID("target")
-    if guid and not UnitIsDead("target") then
-        if self:checkTimeout() then return end
-
-        local unitType = strsplit("-", guid)
-        if unitType == "Creature" or unitType == "Vehicle" then
-            local _, _, _, _, _, npcID = strsplit("-", guid)
-            for _, encounterInfo in ipairs(encounterIDs) do
-                if encounterInfo.npcIDs then
-                    for _, bossID in ipairs(encounterInfo.npcIDs) do
-                        if npcID == tostring(bossID) then
-                            local specializationSet = dbLoadouts[instanceID .. " Encounter"][encounterInfo.encounterID].Specialization
-                            local overrideSpecializationSet = dbLoadouts[instanceID .. " Encounter"][encounterInfo.encounterID]["Override Default Specialization"]
-                            if not overrideSpecializationSet then
-                                specializationSet = dbLoadouts[instanceID .. " Encounter"][-1].Specialization
-                            end 
-                            if specializationSet ~= -1 then
-                                self:checkTalentManager(specializationSet)
-                            end
-                            self:showLoadoutForInstance(instanceID .. " Encounter", encounterInfo.encounterID)
-                            return
-                        end
-                    end
-                end
-            end
-        end
-    end
-end
-
 ---Checks if current instance is tracked and shows reminder if needed
 function addon:checkIfIsTrackedInstance()
     local dbLoadouts = self.db.char.loadouts
-    self:UnregisterEvent("PLAYER_TARGET_CHANGED")
-    self:UnregisterEvent("PLAYER_REGEN_ENABLED")
-    self:UnregisterEvent("PLAYER_REGEN_DISABLED")
     local _, instanceType, _, difficultyName, _, _, _, instanceID = GetInstanceInfo()
     local instance
     local encounter
@@ -462,23 +407,6 @@ function addon:checkIfIsTrackedInstance()
         instance = instanceID .. " Encounter"
         if self.ConvertIDToName[instanceID] and dbLoadouts[instance] and dbLoadouts[instance][-1] then
             encounter = -1
-            for _, instanceInfo in ipairs(self.instanceGroups.Raid) do
-                if instanceInfo.instanceID == instanceID and instanceInfo.encounterIDs then
-                    self:RegisterEvent("PLAYER_TARGET_CHANGED", function()
-                        addon:checkIfTrackedTarget(instanceID, instanceInfo.encounterIDs)
-                    end)
-                
-                    self:RegisterEvent("PLAYER_REGEN_ENABLED", function()
-                        addon:RegisterEvent("PLAYER_TARGET_CHANGED", function()
-                            addon:checkIfTrackedTarget(instanceID, instanceInfo.encounterIDs)
-                        end)
-                    end)
-                    self:RegisterEvent("PLAYER_REGEN_DISABLED", function()
-                        addon:UnregisterEvent("PLAYER_TARGET_CHANGED")
-                    end)
-                    break
-                end
-            end
         end
     elseif difficultyName == "Delves" then
         instance = "Delve"

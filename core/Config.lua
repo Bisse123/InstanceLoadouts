@@ -166,6 +166,31 @@ function addon:populateOptionsArea(targetWidget, instanceTypeValue, instanceValu
 
     local scrollContent = scrollFrame.scrollContent or scrollFrame
 
+    if strfind(instanceTypeValue, "Encounter") and actualInstanceValue ~= -1 then
+        local messagePane = AF.CreateTitledPane(scrollContent, "Boss Specific Loadouts Unavailable", scrollContent:GetWidth() - 10, 170)
+        AF.SetPoint(messagePane, "TOPLEFT", 5, -5)
+        
+        local explanationLabel = AF.CreateFontString(messagePane, "Midnight's secret values prevent the addon from detecting which boss you are targeting, even outside of combat.", "gray", "AF_FONT_NORMAL")
+        AF.SetPoint(explanationLabel, "TOPLEFT", 5, -25)
+        explanationLabel:SetWidth(scrollContent:GetWidth() - 30)
+        explanationLabel:SetJustifyH("LEFT")
+        
+        local instructionLabel = AF.CreateFontString(messagePane, "Only the Default loadout is available for raids.\n\nPlease select \"Default\" to configure raid settings.", "white", "AF_FONT_NORMAL")
+        AF.SetPoint(instructionLabel, "TOPLEFT", explanationLabel, "BOTTOMLEFT", 0, -15)
+        instructionLabel:SetWidth(scrollContent:GetWidth() - 30)
+        instructionLabel:SetJustifyH("LEFT")
+
+        local supportPane = AF.CreateTitledPane(scrollContent, "Support", scrollContent:GetWidth() - 10, 75)
+        AF.SetPoint(supportPane, "TOPLEFT", messagePane, "BOTTOMLEFT", 0, -10)
+        
+        local supportLabel = AF.CreateFontString(supportPane, "If you have any ideas on how to get this working, please reach out on GitHub or Discord (@lolswirl)", "gray", "AF_FONT_NORMAL")
+        AF.SetPoint(supportLabel, "TOPLEFT", 5, -25)
+        supportLabel:SetWidth(scrollContent:GetWidth() - 30)
+        supportLabel:SetJustifyH("LEFT")
+        
+        return
+    end
+
     local yOffset = -5
 
     for _, type in pairs(externalOrder) do

@@ -85,24 +85,6 @@ local function CreateConfigureLoadoutsOptions(parent, yOffset)
     return yOffset - 60
 end
 
----Creates the extra options section
----@param parent table The parent frame
----@param yOffset number The y offset for positioning
----@return number newYOffset The new y offset after adding elements
-local function CreateExtraOptions(parent, yOffset)
-    local extraPane = AF.CreateTitledPane(parent, "Extra Options", parent:GetWidth() - 10, 100)
-    AF.SetPoint(extraPane, "TOPLEFT", 5, yOffset)
-
-    local timeoutSlider = AF.CreateSlider(extraPane, "Target Timeout (seconds)", 200, 0, 120, 5, nil, true)
-    AF.SetPoint(timeoutSlider, "TOPLEFT", extraPane, "TOPLEFT", 5, -45)
-    timeoutSlider:SetValue(addon.db.global.targetTimeout)
-    timeoutSlider:SetOnValueChanged(function(value)
-        addon.db.global.targetTimeout = value
-    end)
-
-    return yOffset - 80
-end
-
 ---Opens the options window
 ---@param onCloseCallback function|nil Optional callback to execute when the window closes
 function addon:openOptions(onCloseCallback)
@@ -164,7 +146,6 @@ function addon:openOptions(onCloseCallback)
     yOffset = CreateImportExportOptions(scrollContent, yOffset)
     yOffset = CreateCustomInstancesOptions(scrollContent, yOffset)
     yOffset = CreateConfigureLoadoutsOptions(scrollContent, yOffset)
-    yOffset = CreateExtraOptions(scrollContent, yOffset)
 
     scrollContent:SetHeight(math.abs(yOffset))
 
