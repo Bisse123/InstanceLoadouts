@@ -205,7 +205,7 @@ function addon:populateOptionsArea(targetWidget, instanceTypeValue, instanceValu
 
             local items = {}
             for key, value in pairs(info) do
-                table.insert(items, {text = value, value = key})
+                table.insert(items, {text = value, value = key, font = "outline"})
             end
             dropdown:SetItems(items)
             dropdown:SetSelectedValue(dbLoadout[type])
@@ -246,7 +246,7 @@ function addon:populateOptionsArea(targetWidget, instanceTypeValue, instanceValu
             if type == "Specialization" then
                 local items = {}
                 for key, value in pairs(info) do
-                    table.insert(items, {text = value, value = key})
+                    table.insert(items, {text = value, value = key, font = "outline"})
                 end
                 dropdown:SetItems(items)
                 dropdown:SetSelectedValue(dbLoadout["Override Default " .. type] and dbLoadout[type] or self.db.char.loadouts[instanceTypeValue][-1][type])
@@ -260,7 +260,7 @@ function addon:populateOptionsArea(targetWidget, instanceTypeValue, instanceValu
             elseif type == "Talents" then
                 local items = {}
                 for key, value in pairs(info) do
-                    table.insert(items, {text = value, value = key})
+                    table.insert(items, {text = value, value = key, font = "outline"})
                 end
                 dropdown:SetItems(items)
                 dropdown:SetSelectedValue(dbLoadout["Override Default Specialization"] and dbLoadout["Override Default " .. type] and dbLoadout[type] or self.db.char.loadouts[instanceTypeValue][-1][type])
@@ -273,7 +273,7 @@ function addon:populateOptionsArea(targetWidget, instanceTypeValue, instanceValu
             else
                 local items = {}
                 for key, value in pairs(info) do
-                    table.insert(items, {text = value, value = key})
+                    table.insert(items, {text = value, value = key, font = "outline"})
                 end
                 dropdown:SetItems(items)
                 dropdown:SetSelectedValue(dbLoadout["Override Default " .. type] and dbLoadout[type] or self.db.char.loadouts[instanceTypeValue][-1][type])
