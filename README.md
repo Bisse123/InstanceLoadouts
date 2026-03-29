@@ -47,4 +47,4 @@ Share your loadouts using the built-in import/export feature.
 
 ## Known Issues
 
-*   Targeting bosses inside of Raids does not work for choosing boss-specific loadouts. This is due to their Units being strictly "Secret" under Midnight's new addon restrictions. I'll look if a solution is even plausible before the Raid drops officially.
+*   Targeting bosses inside of Raids does not work for choosing boss-specific loadouts. This is due to their Units being strictly "Secret" under Midnight's new addon restrictions. Unfortunately, I haven't thought of a way to make this work but if you have any ideas, please feel free to create an issue on github or reach out directly on discord (@lolswirl)!
