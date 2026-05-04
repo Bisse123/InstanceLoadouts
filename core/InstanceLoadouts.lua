@@ -223,6 +223,33 @@ function addon:generateDefaults()
     return db
 end
 
+function addon:PLAYER_ENTERING_WORLD(isLogin, isReload)
+    if not isLogin and not isReload then
+        addon:UnregisterEvent("SPELL_CONFIRMATION_TIMEOUT")
+        self:checkIfIsTrackedInstance()
+        return
+    end
+    local oldChangelog = self.db.global.changelog
+
+    local serializedChangelog = LibSerialize:Serialize(addon:GetChangelog())
+    local compressedChangelog = LibDeflate:CompressDeflate(serializedChangelog)
+    local encodedChangelog = LibDeflate:EncodeForPrint(compressedChangelog)
+    local newChangelog = LibDeflate:Adler32(encodedChangelog)
+
+    self.db.global.changelog = newChangelog
+    if oldChangelog and oldChangelog == newChangelog then
+        self:checkIfIsTrackedInstance()
+        return
+    end
+    if not self.db.global.autoShowChangelog then
+        self:checkIfIsTrackedInstance()
+        return
+    end
+    self:showChangelog(function()
+        self:checkIfIsTrackedInstance()
+    end)
+end
+
 -- Init data for the addon
 -- ChallengeMaps
 -- Battlegrounds
@@ -235,32 +262,10 @@ function addon:InitData()
     self:convertDB()
     local default = self:generateDefaults()
     self.db:RegisterDefaults(default)
-    
 
     self:RegisterEvent("PLAYER_ENTERING_WORLD", function(event, isLogin, isReload)
-        if not isLogin and not isReload then
-            addon:UnregisterEvent("SPELL_CONFIRMATION_TIMEOUT")
-            self:checkIfIsTrackedInstance()
-            return
-        end
-        local oldChangelog = self.db.global.changelog
-
-        local serializedChangelog = LibSerialize:Serialize(addon:GetChangelog())
-        local compressedChangelog = LibDeflate:CompressDeflate(serializedChangelog)
-        local encodedChangelog = LibDeflate:EncodeForPrint(compressedChangelog)
-        local newChangelog = LibDeflate:Adler32(encodedChangelog)
-
-        self.db.global.changelog = newChangelog
-        if oldChangelog and oldChangelog == newChangelog then
-            self:checkIfIsTrackedInstance()
-            return
-        end
-        if not self.db.global.autoShowChangelog then
-            self:checkIfIsTrackedInstance()
-            return
-        end
-        self:showChangelog(function()
-            self:checkIfIsTrackedInstance()
+        C_Timer.After(1, function()
+            self:PLAYER_ENTERING_WORLD(isLogin, isReload)
         end)
     end)
     self:RegisterEvent("ACTIVE_DELVE_DATA_UPDATE", function()
