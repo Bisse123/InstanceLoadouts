@@ -392,14 +392,12 @@ function addon:populateExternalInfo()
         if addonManagerFunctions[addonManager].setHook then
             addonManagerFunctions[addonManager].setHook()
         end
-        self:Print(addonManagers[addonManager] .. " detected")
     end
     local talentManager = self.manager:getTalentManager()
     if talentManager then
         if talentManagerFunctions[talentManager].setHook then
             talentManagerFunctions[talentManager].setHook()
         end
-        self:Print(talentManagers[talentManager] .. " detected")
     end
 
     self:checkSpecializationManager()

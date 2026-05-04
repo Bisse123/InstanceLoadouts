@@ -37,10 +37,7 @@ local encounterSelectionArea = nil
 local optionsArea = nil
 
 local function CreateLayoutAreas(frame, showMiddlePanel)
-    if not frame then
-        print("Error: CreateLayoutAreas called with nil frame")
-        return nil, nil, nil
-    end
+    if not frame then return end
     
     local buttonHeight = 21
     local spacing = 5
@@ -357,10 +354,7 @@ end
 ---@param instanceTypeValue string The type of instance (e.g. "Dungeon", "Raid")
 ---@param instanceValue number The instance ID
 function addon:createOptionsConfig(widget, instanceTypeValue, instanceValue)
-    if not widget then
-        print("Error: createOptionsConfig called with nil widget")
-        return
-    end
+    if not widget then return end
 
     ClearOptionsArea()
     local _, _, targetWidget = CreateLayoutAreas(widget, false)
@@ -375,10 +369,7 @@ end
 ---@param instanceTypeValue string The type of instance
 ---@param instanceValue number The raid instance ID
 local function CreateRaidEncounterButtons(frame, instanceTypeValue, instanceValue)
-    if not frame then
-        print("Error: CreateRaidEncounterButtons called with nil frame")
-        return
-    end
+    if not frame then return end
 
     local _, encounterArea, _ = CreateLayoutAreas(frame, true)
 
@@ -452,10 +443,7 @@ end
 ---@param instanceTypeValue string The type of instance
 ---@param tierValue number The tier ID
 local function CreateDungeonInstanceButtons(frame, instanceTypeValue, tierValue)
-    if not frame then
-        print("Error: CreateDungeonInstanceButtons called with nil frame")
-        return
-    end
+    if not frame then return end
 
     local _, encounterArea, _ = CreateLayoutAreas(frame, true)
 
@@ -537,10 +525,7 @@ end
 ---@param frame table The AbstractFramework frame to add elements to
 ---@param instanceTypeValue string The type of instance
 local function CreateInstanceButtons(frame, instanceTypeValue)
-    if not frame then
-        print("Error: CreateInstanceButtons called with nil frame")
-        return
-    end
+    if not frame then return end
 
     local showMiddlePanel = instanceTypeValue == "Raid" or instanceTypeValue == "Dungeon"
     local instanceArea, _, _ = CreateLayoutAreas(frame, showMiddlePanel)
@@ -582,10 +567,7 @@ local function CreateInstanceButtons(frame, instanceTypeValue)
             lastShownInstance = tab
             addon.ConfigView.instance = tab.id
 
-            if not addon.frame then
-                print("Error: ShowInstance called but addon.frame is nil")
-                return
-            end
+            if not addon.frame then return end
 
             if instanceTypeValue == "Raid" then
                 CreateRaidEncounterButtons(addon.frame, instanceTypeValue, tab.id)
