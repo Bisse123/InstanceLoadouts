@@ -1,6 +1,9 @@
 package-as: InstanceLoadouts
 
 externals:
+    UI:
+        url: https://github.com/lolswirl/SwirlFramework
+        branch: main
     Libs/LibStub: https://repos.wowace.com/wow/ace3/trunk/LibStub
     Libs/LibDeflate: https://github.com/SafeteeWoW/LibDeflate
     Libs/LibSerialize: https://github.com/rossnichols/LibSerialize
