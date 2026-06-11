@@ -9,7 +9,7 @@ local changelogData = {
             "Add Midnight Delves",
             "Remove The Ring of Valor Arena",
             "Allow overriding default talents without requiring overriding default specialization",
-            "Redesigned the UI (again) as AbstractFramework maintenance has diminished",
+            "Redesigned the UI (again) :)",
         }
     },
     {
