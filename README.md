@@ -2,8 +2,6 @@
 
 Never forget to change your specialization, talents, gear, or addon presets ever again!
 
-**Note:** Requires [_AbstractFramework_](https://addons.wago.io/addons/mKOv2E6x) in order to function. Due to limitations with Wago and WowUp's packaging, must be installed separately for now. Installed automatically with _CurseForge_ directly.
-
 ## Features
 
 Create custom loadouts for each instance type. The addon will remind you to switch your spec, talents, equipment set, and addon profile when entering:
