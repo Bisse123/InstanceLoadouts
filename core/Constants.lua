@@ -132,7 +132,6 @@ function addon:getCurrentSeasonArenas()
     local instanceIDs = {
         572, -- Ruins of Lordaeron
         617, -- Dalaran Sewers
-        618, -- The Ring of Valor
         980, -- Tol'Viron Arena
         1134, -- Tiger's Peak
         1504, -- Black Rook Hold Arena

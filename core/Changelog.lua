@@ -7,6 +7,7 @@ local changelogData = {
         version = "Version 3.1",
         changes = {
             "Add Midnight Delves",
+            "Remove The Ring of Valor Arena",
             "Allow overriding default talents without requiring overriding default specialization",
             "Redesigned the UI (again) as AbstractFramework maintenance has diminished",
         }
