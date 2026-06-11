@@ -294,6 +294,35 @@ SlashCmdList["INSTANCELOADOUTS"] = function(msg)
     elseif command == "debug" or command == "d" then
         -- Force-show the reminder for the current instance even if nothing needs changing
         addon:checkIfIsTrackedInstance(true)
+    elseif command == "scan" then
+        local targets = {
+            ["Collegiate Calamity"] = true,
+            ["Atal'Aman"] = true,
+            ["Twilight Crypts"] = true,
+            ["Torment's Rise"] = true,
+            ["Shadowguard Point"] = true,
+            ["The Grudge Pit"] = true,
+            ["The Gulf of Memory"] = true,
+            ["The Shadow Enclave"] = true,
+            ["Parhelion Plaza"] = true,
+            ["Sunkiller Sanctum"] = true,
+            ["The Darkway"] = true,
+        }
+        addon:Print("Scanning instance IDs 0-4000...")
+        local found = {}
+        for i = 0, 4000 do
+            local name = GetRealZoneText(i)
+            if name and targets[name] then
+                found[#found+1] = i .. ", -- " .. name
+            end
+        end
+        if #found == 0 then
+            addon:Print("No matches found.")
+        else
+            for _, line in ipairs(found) do
+                addon:Print(line)
+            end
+        end
     else
         -- Show help/default action
         addon:toggleOptions()
