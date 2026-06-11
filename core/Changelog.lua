@@ -4,12 +4,26 @@ local C = addon.Components
 
 local changelogData = {
     {
-        version = "Version 3.1",
+        version = "Version 3.3",
         changes = {
             "Add Midnight Delves",
             "Remove The Ring of Valor Arena",
             "Allow overriding default talents without requiring overriding default specialization",
             "Redesigned the UI (again) :)",
+        }
+    },
+    {
+        version = "Version 3.2",
+        changes = {
+            "Fixed addon managers loading after Instance Loadouts",
+        }
+    },
+    {
+        version = "Version 3.1",
+        changes = {
+            "Removed support for boss-specific raid boss loadouts (thank you Midnight Secret Values system!)",
+            "Removed unit check on timeout",
+            "Add outline to dropdown text",
         }
     },
     {
