@@ -262,18 +262,16 @@ function addon:populateOptionsArea(host, instanceTypeValue, instanceValue)
                         end)
                     dropdown:SetEnabled(dbLoadout[overrideKey])
                 elseif type == "Talents" then
-                    local specEnabled = dbLoadout["Override Default Specialization"] and dbLoadout.Specialization ~= -1
-                    toggle = C:CreateToggle(card, overrideKey, dbLoadout[overrideKey] and specEnabled, function(checked)
+                    toggle = C:CreateToggle(card, overrideKey, dbLoadout[overrideKey], function(checked)
                         dbLoadout[overrideKey] = checked
                         addon:openConfig()
                     end)
-                    toggle:SetEnabled(specEnabled)
                     dropdown = C:CreateDropdown(card, nil, items,
-                        dbLoadout["Override Default Specialization"] and dbLoadout[overrideKey] and dbLoadout[type] or dbLoadouts[instanceTypeValue][-1][type],
+                        dbLoadout[overrideKey] and dbLoadout[type] or dbLoadouts[instanceTypeValue][-1][type],
                         function(value)
                             dbLoadout[type] = value
                         end)
-                    dropdown:SetEnabled(dbLoadout[overrideKey] and specEnabled)
+                    dropdown:SetEnabled(dbLoadout[overrideKey])
                 else
                     toggle = C:CreateToggle(card, overrideKey, dbLoadout[overrideKey], function(checked)
                         dbLoadout[overrideKey] = checked
@@ -363,8 +361,7 @@ local function CheckManagersForLoadout(dbKey, id)
     local dbLoadouts = addon.db.char.loadouts
     local specializationSet = dbLoadouts[dbKey][id].Specialization
     local overrideSpecializationSet = dbLoadouts[dbKey][id]["Override Default Specialization"]
-    local overrideTalentSet = dbLoadouts[dbKey][id]["Override Default Talents"]
-    if not overrideSpecializationSet or not overrideTalentSet then
+    if not overrideSpecializationSet then
         specializationSet = dbLoadouts[dbKey][-1].Specialization
     end
     if specializationSet ~= -1 then
