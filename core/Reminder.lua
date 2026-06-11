@@ -316,6 +316,7 @@ function addon:showLoadoutForInstance(instanceType, instance, forceShow)
                 local id = tonumber(idStr)
                 return self.ConvertIDToName[id]
             end
+            if instanceType == "Open World" then return "Open World" end
             return self.ConvertIDToName[instance]
         end)(),
         onGear = function()
