@@ -106,29 +106,21 @@ end
 ---Gets and populates current season delves
 function addon:getCurrentSeasonDelves()
     local instanceIDs = {
-        2664, -- Fungal Folly
-        2679, -- Mycomancer Cavern
-        2680, -- Earthcrawl Mines
-        2681, -- Kriegval's Rest
-        -- 2682, -- Zekvir's Lair TWW Season 1
-        2683, -- The Waterworks
-        2684, -- The Dread Pit
-        2685, -- Skittering Breach
-        2686, -- Nightfall Sanctum
-        2687, -- The Sinkhole
-        2688, -- The Spiral Weave
-        2689, -- Tak-Rethan Abyss
-        2690, -- The Underkeep
-        2815, -- Excavation Site 9
-        2826, -- Sidestreet Sluice
-        -- 2831, -- Demolition Dome TWW Season 2
-        2803, -- Archival Assault
-        2951, -- Voidrazor Sanctuary TWW Season 3
+        2933, -- Collegiate Calamity
+        2952, -- The Shadow Enclave
+        2953, -- Parhelion Plaza
+        2961, -- Twilight Crypts
+        2962, -- Atal'Aman
+        2963, -- The Grudge Pit
+        2964, -- The Gulf of Memory
+        2965, -- Sunkiller Sanctum
+        2979, -- Shadowguard Point
+        3003, -- The Darkway
+        2966, -- Torment's Rise Midnight S1
     }
 
     local delve = self.instanceGroups.Delve
     tinsert(delve, {instanceID = -1, instanceName = "Default"})
-    
     for _, instanceID in ipairs(instanceIDs) do
         local instanceName = GetRealZoneText(instanceID)
         tinsert(delve, {instanceID = instanceID, instanceName = instanceName})

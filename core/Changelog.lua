@@ -6,6 +6,7 @@ local changelogData = {
     {
         version = "Version 3.1",
         changes = {
+            "Add Midnight Delves",
             "Allow overriding default talents without requiring overriding default specialization",
             "Redesigned the UI (again) as AbstractFramework maintenance has diminished",
         }
