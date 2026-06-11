@@ -1,5 +1,7 @@
 local addonName, addon = ...
 
+addon.icon = "Interface\\AddOns\\InstanceLoadouts\\Media\\Icons\\IL.tga"
+
 addon.ConvertIDToName = {}
 
 -- Raid boss npc IDs

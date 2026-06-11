@@ -1,7 +1,6 @@
 local addonName, addon = ...
 
----@type AbstractFramework
-local AF = _G.AbstractFramework
+local C = addon.Components
 
 local isGarrison = {
     1152, -- Horde Garrison lvl 1
@@ -12,18 +11,68 @@ local isGarrison = {
     1159, -- Alliance Garrison lvl 3
 }
 
+---Creates a reminder section card showing either a status line or an action button
+---@param scroller table The scroll content to add the card to
+---@param title string The card title
+---@return table card The card with SetStatus/SetAction methods
+local function CreateSection(scroller, title)
+    local card = C:CreateCard(scroller, title)
+
+    local row = CreateFrame("Frame", nil, card)
+    row:SetHeight(24)
+
+    local status = row:CreateFontString(nil, "OVERLAY")
+    C.ApplyFont(status, "normal")
+    status:SetPoint("LEFT", row, "LEFT", 0, 0)
+    status:SetPoint("RIGHT", row, "RIGHT", 0, 0)
+    status:SetJustifyH("LEFT")
+    status:Hide()
+
+    local button = C:CreateButton(row, "", {height = 24})
+    button:SetPoint("TOPLEFT", row, "TOPLEFT", 0, 0)
+    button:SetPoint("BOTTOMRIGHT", row, "BOTTOMRIGHT", 0, 0)
+    button:Hide()
+    card.button = button
+
+    card:AddWidget(row, nil, 24)
+    scroller:AddCard(card)
+
+    function card:SetStatus(text, value, color)
+        button:Hide()
+        local theme = addon.Theme
+        local c = color or theme.text.primary
+        if value then
+            status:SetText(text .. " " .. theme.accent:WrapTextInColorCode(value))
+            status:SetTextColor(c.r, c.g, c.b, 1)
+        else
+            status:SetTextColor(c.r, c.g, c.b, 1)
+            status:SetText(text)
+        end
+        status:Show()
+    end
+
+    function card:SetAction(text, onClick)
+        status:Hide()
+        button:SetLabel(text)
+        button:SetCallback(onClick)
+        button:Show()
+    end
+
+    return card
+end
+
 ---Creates the reminder GUI for Specializations
----@param parent Frame The parent frame to add elements to
----@param instanceType string The instance type (e.g. "Dungeon", "Raid")  
+---@param parent table The scroll content to add elements to
+---@param instanceType string The instance type (e.g. "Dungeon", "Raid")
 ---@param instance number The instance ID
 ---@return boolean True if specialization needs to be changed
 function addon:createSpecializationFrame(parent, instanceType, instance)
     local dbLoadouts = self.db.char.loadouts
     local change = false
-    
-    local container = AF.CreateTitledPane(parent, "Specialization", parent:GetWidth() - 10, 40)
-    AF.SetPoint(container, "TOPLEFT", 5, -60)
-    
+    local theme = self.Theme
+
+    local section = CreateSection(parent, "Specialization")
+
     if next(self.externalInfo.Specialization) then
         local currentSpec = GetSpecialization()
         local specializationSet = dbLoadouts[instanceType][instance].Specialization
@@ -32,17 +81,12 @@ function addon:createSpecializationFrame(parent, instanceType, instance)
             specializationSet = dbLoadouts[instanceType][-1].Specialization
         end
         if specializationSet == -1 then
-            local label = AF.CreateFontString(container, "Specialization not set", "gray")
-            AF.SetPoint(label, "TOPLEFT", 0, -25)
+            section:SetStatus("Specialization not set", nil, theme.text.muted)
         elseif specializationSet ~= currentSpec then
             change = true
             local _, name = GetSpecializationInfo(specializationSet)
-            local button = AF.CreateButton(container, "Change Specialization to " .. name, "static", parent:GetWidth() - 10, 25)
-            AF.SetPoint(button, "TOPLEFT", 0, -25)
-            button:SetTextHighlightColor(addonName)
-            button:SetBorderHighlightColor(addonName)
-            button:SetOnClick(function()
-                button:SetEnabled(false)
+            section:SetAction("Change Specialization to " .. name, function()
+                section.button:SetEnabled(false)
                 C_SpecializationInfo.SetSpecialization(specializationSet)
                 addon:RegisterEvent("ACTIVE_PLAYER_SPECIALIZATION_CHANGED", function()
                     if specializationSet == GetSpecialization() then
@@ -54,36 +98,34 @@ function addon:createSpecializationFrame(parent, instanceType, instance)
                     end
                 end)
                 addon:RegisterEvent("SPECIALIZATION_CHANGE_CAST_FAILED", function()
-                    button:SetEnabled(true)
+                    section.button:SetEnabled(true)
                     addon:UnregisterEvent("ACTIVE_PLAYER_SPECIALIZATION_CHANGED")
                     addon:UnregisterEvent("SPECIALIZATION_CHANGE_CAST_FAILED")
                 end)
             end)
         else
             local _, name = GetSpecializationInfo(currentSpec)
-            local label = AF.CreateFontString(container, "Current Specialization is " .. name, "white")
-            AF.SetPoint(label, "TOPLEFT", 0, -25)
+            section:SetStatus("Current Specialization is", name)
         end
     else
-        local label = AF.CreateFontString(container, "No Specialization Manager Found", "gray")
-        AF.SetPoint(label, "TOPLEFT", 0, -25)
+        section:SetStatus("No Specialization Manager Found", nil, theme.text.muted)
     end
-    
+
     return change
 end
 
 ---Creates the reminder GUI for Talents
----@param parent Frame The parent frame to add elements to
+---@param parent table The scroll content to add elements to
 ---@param instanceType string The instance type
----@param instance number The instance ID 
+---@param instance number The instance ID
 ---@return boolean True if talents need to be changed
 function addon:createTalentsFrame(parent, instanceType, instance)
     local dbLoadouts = self.db.char.loadouts
     local change = false
-    
-    local container = AF.CreateTitledPane(parent, "Talents", parent:GetWidth() - 10, 40)
-    AF.SetPoint(container, "TOPLEFT", 5, -115)
-    
+    local theme = self.Theme
+
+    local section = CreateSection(parent, "Talents")
+
     if next(self.externalInfo.Talents) then
         local specializationSet = dbLoadouts[instanceType][instance].Specialization
         local overrideSpecializationSet = dbLoadouts[instanceType][instance]["Override Default Specialization"]
@@ -91,14 +133,13 @@ function addon:createTalentsFrame(parent, instanceType, instance)
         local overrideTalentSet = dbLoadouts[instanceType][instance]["Override Default Talents"]
         if not overrideSpecializationSet then
             specializationSet = dbLoadouts[instanceType][-1].Specialization
-            talentSet = dbLoadouts[instanceType][-1].Talents
-        elseif not overrideTalentSet then
+        end
+        if not overrideTalentSet then
             talentSet = dbLoadouts[instanceType][-1].Talents
         end
 
         if talentSet == -1 then
-            local label = AF.CreateFontString(container, "Talents not set", "gray")
-            AF.SetPoint(label, "TOPLEFT", 0, -25)
+            section:SetStatus("Talents not set", nil, theme.text.muted)
         else
             if specializationSet == GetSpecialization() then
                 local specID = GetSpecializationInfo(specializationSet)
@@ -112,27 +153,17 @@ function addon:createTalentsFrame(parent, instanceType, instance)
                 if talentSet ~= configID then
                     change = true
                     local name = self.externalInfo.Talents[talentSet]
-                    local button = AF.CreateButton(container, "Change Talents to " .. name, "static", parent:GetWidth() - 10, 25)
-                    AF.SetPoint(button, "TOPLEFT", 0, -25)
-                    button:SetTextHighlightColor(addonName)
-                    button:SetBorderHighlightColor(addonName)
-                    button:SetOnClick(function()
+                    section:SetAction("Change Talents to " .. name, function()
                         if talentManager then
                             self.manager.loadTalentLoadout(talentSet, true)
-                            button:SetEnabled(false)
+                            section.button:SetEnabled(false)
                             addon:RegisterEvent("TRAIT_CONFIG_UPDATED", function()
-                                for _, child in ipairs({container:GetChildren()}) do
-                                    child:Hide()
-                                end
-                                
-                                local label = AF.CreateFontString(container, "Current Talents are " .. name, "white")
-                                AF.SetPoint(label, "TOPLEFT", 10, -25)
-                                
+                                section:SetStatus("Current Talents are", name)
                                 addon:UnregisterEvent("TRAIT_CONFIG_UPDATED")
                                 addon:UnregisterEvent("CONFIG_COMMIT_FAILED")
                             end)
                             addon:RegisterEvent("CONFIG_COMMIT_FAILED", function()
-                                button:SetEnabled(true)
+                                section.button:SetEnabled(true)
                                 addon:UnregisterEvent("TRAIT_CONFIG_UPDATED")
                                 addon:UnregisterEvent("CONFIG_COMMIT_FAILED")
                             end)
@@ -140,34 +171,23 @@ function addon:createTalentsFrame(parent, instanceType, instance)
                             local result = C_ClassTalents.LoadConfig(talentSet, true)
                             if not C_AddOns.IsAddOnLoaded("Blizzard_PlayerSpells") then
                                 C_AddOns.LoadAddOn("Blizzard_PlayerSpells")
-                            end 
+                            end
                             PlayerSpellsFrame.TalentsFrame.LoadSystem:SetSelectionID(talentSet)
                             if result == 1 then
                                 C_ClassTalents.UpdateLastSelectedSavedConfigID(specID, talentSet)
-                                for _, child in ipairs({container:GetChildren()}) do
-                                    child:Hide()
-                                end
-                                
-                                local label = AF.CreateFontString(container, "Current Talents are " .. name, "white")
-                                AF.SetPoint(label, "TOPLEFT", 0, -25)
+                                section:SetStatus("Current Talents are", name)
                             elseif result == 2 then
-                                button:SetEnabled(false)
+                                section.button:SetEnabled(false)
                                 addon:RegisterEvent("TRAIT_CONFIG_UPDATED", function()
                                     if specializationSet == GetSpecialization() then
                                         C_ClassTalents.UpdateLastSelectedSavedConfigID(specID, talentSet)
-                                        for _, child in ipairs({container:GetChildren()}) do
-                                            child:Hide()
-                                        end
-                                        
-                                        local label = AF.CreateFontString(container, "Current Talents are " .. name, "white")
-                                        AF.SetPoint(label, "TOPLEFT", 0, -25)
-
+                                        section:SetStatus("Current Talents are", name)
                                         addon:UnregisterEvent("TRAIT_CONFIG_UPDATED")
                                         addon:UnregisterEvent("CONFIG_COMMIT_FAILED")
                                     end
                                 end)
                                 addon:RegisterEvent("CONFIG_COMMIT_FAILED", function()
-                                    button:SetEnabled(true)
+                                    section.button:SetEnabled(true)
                                     addon:UnregisterEvent("TRAIT_CONFIG_UPDATED")
                                     addon:UnregisterEvent("CONFIG_COMMIT_FAILED")
                                 end)
@@ -176,33 +196,31 @@ function addon:createTalentsFrame(parent, instanceType, instance)
                     end)
                 else
                     local name = self.externalInfo.Talents[talentSet]
-                    local label = AF.CreateFontString(container, "Current Talents are " .. name, "white")
-                    AF.SetPoint(label, "TOPLEFT", 0, -25)
+                    section:SetStatus("Current Talents are", name)
                 end
             else
-                local label = AF.CreateFontString(container, "Change Specialization", "orange")
-                AF.SetPoint(label, "TOPLEFT", 0, -25)
+                section:SetStatus("Change Specialization", nil, theme.orange)
             end
         end
     else
-        local label = AF.CreateFontString(container, "No Talents Manager Found", "gray")
-        AF.SetPoint(label, "TOPLEFT", 0, -25)
+        section:SetStatus("No Talents Manager Found", nil, theme.text.muted)
     end
+
     return change
 end
 
 ---Creates the reminder GUI for Gearsets
----@param parent Frame The parent frame to add elements to
+---@param parent table The scroll content to add elements to
 ---@param instanceType string The instance type
 ---@param instance number The instance ID
 ---@return boolean True if gearset needs to be changed
 function addon:createGearsetFrame(parent, instanceType, instance)
     local dbLoadouts = self.db.char.loadouts
     local change = false
-    
-    local container = AF.CreateTitledPane(parent, "Gearset", parent:GetWidth() - 10, 40)
-    AF.SetPoint(container, "TOPLEFT", 5, -5)
-    
+    local theme = self.Theme
+
+    local section = CreateSection(parent, "Gearset")
+
     if next(self.externalInfo.Gearset) then
         local gearSet = dbLoadouts[instanceType][instance].Gearset
         local overrideGearSet = dbLoadouts[instanceType][instance]["Override Default Gearset"]
@@ -210,49 +228,38 @@ function addon:createGearsetFrame(parent, instanceType, instance)
             gearSet = dbLoadouts[instanceType][-1].Gearset
         end
         if gearSet == -1 then
-            local label = AF.CreateFontString(container, "Gearset not set", "gray")
-            AF.SetPoint(label, "TOPLEFT", 0, -25)
+            section:SetStatus("Gearset not set", nil, theme.text.muted)
         else
             local name, _, _, isEquipped = C_EquipmentSet.GetEquipmentSetInfo(gearSet)
             if name and not isEquipped then
                 change = true
-                local button = AF.CreateButton(container, "Change Gearset to " .. name, "static", parent:GetWidth() - 10, 25)
-                AF.SetPoint(button, "TOPLEFT", 0, -25)
-                button:SetTextHighlightColor(addonName)
-                button:SetBorderHighlightColor(addonName)
-                button:SetOnClick(function()
+                section:SetAction("Change Gearset to " .. name, function()
                     C_EquipmentSet.UseEquipmentSet(gearSet)
-                    for _, child in ipairs({container:GetChildren()}) do
-                        child:Hide()
-                    end
-                    
-                    local label = AF.CreateFontString(container, "Current Gearset is " .. name, "white")
-                    AF.SetPoint(label, "TOPLEFT", 0, -25)
+                    section:SetStatus("Current Gearset is", name)
                 end)
             elseif isEquipped then
-                local label = AF.CreateFontString(container, "Current Gearset is " .. name, "white")
-                AF.SetPoint(label, "TOPLEFT", 0, -25)
+                section:SetStatus("Current Gearset is", name)
             end
         end
     else
-        local label = AF.CreateFontString(container, "No Gearset Manager Found", "gray")
-        AF.SetPoint(label, "TOPLEFT", 0, -25)
+        section:SetStatus("No Gearset Manager Found", nil, theme.text.muted)
     end
+
     return change
 end
 
 ---Creates the reminder GUI for Addons
----@param parent Frame The parent frame to add elements to
+---@param parent table The scroll content to add elements to
 ---@param instanceType string The instance type
 ---@param instance number The instance ID
----@return boolean True if addons need to be changed 
+---@return boolean True if addons need to be changed
 function addon:createAddonsFrame(parent, instanceType, instance)
     local dbLoadouts = self.db.char.loadouts
     local change = false
-    
-    local container = AF.CreateTitledPane(parent, "AddOns", parent:GetWidth() - 10, 40)
-    AF.SetPoint(container, "TOPLEFT", 5, -170)
-    
+    local theme = self.Theme
+
+    local section = CreateSection(parent, "AddOns")
+
     if next(self.externalInfo.Addons) then
         local addonSet = dbLoadouts[instanceType][instance].Addons
         local overrideAddonSet = dbLoadouts[instanceType][instance]["Override Default Gearset"]
@@ -260,137 +267,105 @@ function addon:createAddonsFrame(parent, instanceType, instance)
             addonSet = dbLoadouts[instanceType][-1].Addons
         end
         if addonSet == -1 then
-            local label = AF.CreateFontString(container, "AddOns not set", "gray")
-            AF.SetPoint(label, "TOPLEFT", 0, -25)
+            section:SetStatus("AddOns not set", nil, theme.text.muted)
         else
             local name = self.manager:getAddonSetName(addonSet)
             local isSetActive = self.manager:isActiveAddonSet(addonSet)
             if not isSetActive then
                 change = true
-                local button = AF.CreateButton(container, "Change AddOns to " .. name, "static", parent:GetWidth() - 10, 25)
-                AF.SetPoint(button, "TOPLEFT", 0, -25)
-                button:SetTextHighlightColor(addonName)
-                button:SetBorderHighlightColor(addonName)
-                button:SetScript("OnClick", function()
-                    local text = AF.WrapTextInColor("Reload UI now?", "firebrick")
-                    local dialog = AF.GetDialog(parent:GetParent(), text, 200)
-                    AF.SetPoint(dialog, "CENTER", 0, 0)
-                    dialog:SetOnConfirm(function()
+                section:SetAction("Change AddOns to " .. name, function()
+                    C.ShowConfirm(theme.error:WrapTextInColorCode("Reload UI now?"), function()
                         addon.manager:loadAddons(addonSet)
                     end)
                 end)
             else
-                local label = AF.CreateFontString(container, "Current AddOns are " .. name, "white")
-                AF.SetPoint(label, "TOPLEFT", 0, -25)
+                section:SetStatus("Current AddOns are", name)
             end
         end
     else
-        local label = AF.CreateFontString(container, "No AddOns Manager Found", "gray")
-        AF.SetPoint(label, "TOPLEFT", 0, -25)
+        section:SetStatus("No AddOns Manager Found", nil, theme.text.muted)
     end
+
     return change
 end
 
 ---Shows the reminder window for a specific instance
 ---@param instanceType string The instance type
 ---@param instance number The instance ID
-function addon:showLoadoutForInstance(instanceType, instance)
+---@param forceShow boolean|nil Show the window even if nothing needs changing (debug)
+function addon:showLoadoutForInstance(instanceType, instance, forceShow)
     local dbLoadouts = self.db.char.loadouts
     if not dbLoadouts[instanceType] or not dbLoadouts[instanceType][instance] then
+        if forceShow then
+            self:Print("No loadout configured for " .. tostring(self.ConvertIDToName[instance] or instance))
+        end
         if self.frame then
             self.frame:Hide()
-            self.frame = nil
         end
         return
     end
-    
-    local frame = self.frame
-    if self.frame and self.frameType == "Reminder" then
-        for _, child in ipairs({self.frame:GetChildren()}) do
-            child:Hide()
-        end
-    else
-        if self.frame then
-            self.frame:Hide()
-            self.frame = nil
-        end
-        self.frameType = "Reminder"
-        frame = AF.CreateHeaderedFrame(AF.UIParent, "InstanceLoadouts_Reminder",
-            addonName, 400, 260)
-        AF.SetPoint(frame, "CENTER")
-        frame:SetTitleColor("white")
 
-        local optionsButton = AF.CreateButton(frame.header, "", addonName, 20, 20)
-        AF.ApplyDefaultBackdropWithColors(optionsButton, "header")
-        AF.SetPoint(optionsButton, "TOPRIGHT", -19, 0)
-
-        optionsButton:SetTexture("OptionsIcon-Brown", {14, 14}, {"CENTER", 0, 0}, true)
-        optionsButton:SetFrameLevel(frame:GetFrameLevel() + 10)
-        optionsButton:SetOnClick(function()
-            local encounter = instance
+    local win, content = self.UI.AcquireWindow("Reminder", {
+        width = 425,
+        height = "auto",
+        icon = addon.icon,
+        title = "",
+        pageTitle = (function()
             if strfind(instanceType, "Encounter") then
-                local instanceStr = strsplit(" ", instanceType)
-                instance = tonumber(instanceStr)
-                instanceType = "Raid"
-            elseif instanceType == "Dungeon" then
+                local idStr = strsplit(" ", instanceType)
+                local id = tonumber(idStr)
+                return self.ConvertIDToName[id]
+            end
+            return self.ConvertIDToName[instance]
+        end)(),
+        onGear = function()
+            local encounter = instance
+            local configInstanceType = instanceType
+            local configInstance = instance
+            if strfind(configInstanceType, "Encounter") then
+                local instanceStr = strsplit(" ", configInstanceType)
+                configInstance = tonumber(instanceStr)
+                configInstanceType = "Raid"
+            elseif configInstanceType == "Dungeon" then
                 for _, tierInfo in ipairs(addon.instanceGroups.Dungeon) do
                     if tierInfo.instanceIDs then
                         for _, instanceInfo in ipairs(tierInfo.instanceIDs) do
-                            if instanceInfo.instanceID and instanceInfo.instanceID == instance then
-                                instance = tierInfo.tierID
+                            if instanceInfo.instanceID and instanceInfo.instanceID == configInstance then
+                                configInstance = tierInfo.tierID
                                 break
                             end
                         end
                     end
-                    if instance ~= encounter then
+                    if configInstance ~= encounter then
                         break
                     end
                 end
             end
-            
-            if addon.frame then
-                addon.frame:Hide()
-                addon.frame = nil
-            end
-            addon.ConfigView.instanceType = instanceType
-            addon.ConfigView.instance = instance
+
+            addon.ConfigView.instanceType = configInstanceType
+            addon.ConfigView.instance = configInstance
             addon.ConfigView.encounter = encounter
             addon:openConfig()
-        end)
-        
-        frame:SetScript("OnHide", function()
-            self.frame = nil
-        end)
+        end,
+    })
 
-        _G["InstanceLoadouts_Reminder"] = frame
-        table.insert(UISpecialFrames, "InstanceLoadouts_Reminder")
-    end
-    
-    local header = AF.CreateFontString(frame, self.ConvertIDToName[instance], "white", "IL_HEADER_FONT")
-    AF.SetPoint(header, "TOP", 0, -5)
+    local scroller = C:CreateTabScroller(content)
 
-    local box = AF.CreateBorderedFrame(frame, nil, frame:GetWidth() - 10, frame:GetHeight() - 35, "background2", "black")
-    AF.SetPoint(box, "TOPLEFT", 5, -30)
-    
-    local gearsetChange = self:createGearsetFrame(box, instanceType, instance)
-    local specializationChange = self:createSpecializationFrame(box, instanceType, instance)
-    local talentsChange = self:createTalentsFrame(box, instanceType, instance)
-    local addonsChange = self:createAddonsFrame(box, instanceType, instance)
+    local gearsetChange = self:createGearsetFrame(scroller, instanceType, instance)
+    local specializationChange = self:createSpecializationFrame(scroller, instanceType, instance)
+    local talentsChange = self:createTalentsFrame(scroller, instanceType, instance)
+    local addonsChange = self:createAddonsFrame(scroller, instanceType, instance)
 
-    self.frame = frame
+    scroller:Commit(nil, win.FitToContent)
 
-    if not specializationChange and not talentsChange and not gearsetChange and not addonsChange then
-        if self.frame then
-            self.frame:Hide()
-            self.frame = nil
-        end
-    else
-        frame:Show()
+    if not specializationChange and not talentsChange and not gearsetChange and not addonsChange and not forceShow then
+        win:Hide()
     end
 end
 
 ---Checks if current instance is tracked and shows reminder if needed
-function addon:checkIfIsTrackedInstance()
+---@param forceShow boolean|nil Show the reminder even if nothing needs changing (debug)
+function addon:checkIfIsTrackedInstance(forceShow)
     local dbLoadouts = self.db.char.loadouts
     local _, instanceType, _, difficultyName, _, _, _, instanceID = GetInstanceInfo()
     local instance
@@ -436,6 +411,8 @@ function addon:checkIfIsTrackedInstance()
             self:checkTalentManager(specializationSet)
         end
         self:checkAddonManager()
-        self:showLoadoutForInstance(instance, encounter)
+        self:showLoadoutForInstance(instance, encounter, forceShow)
+    elseif forceShow then
+        self:Print("Current instance is not tracked" .. (instance and (" (" .. instance .. ")") or ""))
     end
 end

@@ -4,23 +4,11 @@ _G[addonName] = addon
 
 LibStub("AceAddon-3.0"):NewAddon(addon, addonName, "AceConsole-3.0", "AceEvent-3.0", "AceHook-3.0")
 
----@type AbstractFramework
-local AF = _G.AbstractFramework
-
 local LibSerialize = LibStub("LibSerialize")
 local LibDeflate = LibStub("LibDeflate")
 
-local _, UNIT_CLASS = UnitClass("player")
-AF.RegisterAddon(addonName)
-AF.SetAddonAccentColor(
-    addonName,
-    AF.GetColorHex(UNIT_CLASS),
-    {0.15, 0.15, 0.15, 1},
-    AF.GetColorHex(UNIT_CLASS, 0.7)
-)
-AF.AddColor("background", {0.024, 0.024, 0.031, 0.75})
-AF.AddColor("background2", {0.024, 0.024, 0.031, 0.3})
-AF.CreateFont(addonName, "IL_HEADER_FONT", nil, 18, "OUTLINE", nil, "white", "CENTER", "MIDDLE")
+addon.Setup(addonName)
+addon.InitTheme()
 
 ---Shows the changelog window
 ---@param onCloseCallback function|nil Optional callback to execute when the window closes
@@ -37,42 +25,6 @@ end
 ---@param onCloseCallback function|nil Optional callback to execute when the window closes
 function addon:toggleOptions(onCloseCallback)
     self:openOptions(onCloseCallback)
-end
-
-local optionFunctions = {
-    ["Options"] = addon.toggleOptions,
-    ["Changelog"] = addon.toggleChangelog,
-    ["Custom Instances"] = addon.toggleCustomInstanceUI,
-    ["Loadouts"] = addon.toggleConfig,
-    ["Import"] = addon.toggleImport,
-    ["Export"] = addon.toggleExport,
-}
-
----Executes the specified options function
----@param info table The options info table  
----@param button string The button pressed
-function addon:executeOptionsFunction(info, button)
-    if self.frame then
-        self.frame:Hide()
-        self.frame = nil
-    end
-    optionFunctions[info.option.name]()
-end
-
----Creates an "Open Options" button and container for the given frame
----@param parent Frame The parent frame to add the button to
-function addon:createOptionsButton(parent)
-    local container = AF.CreateFrame(parent, nil, 200, 50)
-    AF.SetPoint(container, "TOPLEFT", 10, -10)
-    
-    local button = AF.CreateButton(container, "Open Options", addonName, 150, 30)
-    AF.SetPoint(button, "TOPLEFT", 0, 0)
-    button:SetOnClick(function()
-        if parent and parent.Hide then
-            parent:Hide()
-        end
-        self:toggleOptions()
-    end)
 end
 
 function addon:convertDB()
@@ -339,6 +291,9 @@ SlashCmdList["INSTANCELOADOUTS"] = function(msg)
     elseif command == "target" or command == "t" then
         -- Manual target testing for reminder system
         addon:checkIfIsTrackedInstance()
+    elseif command == "debug" or command == "d" then
+        -- Force-show the reminder for the current instance even if nothing needs changing
+        addon:checkIfIsTrackedInstance(true)
     else
         -- Show help/default action
         addon:toggleOptions()

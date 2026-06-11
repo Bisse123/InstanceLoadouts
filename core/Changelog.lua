@@ -1,9 +1,14 @@
 local addonName, addon = ...
 
----@type AbstractFramework
-local AF = _G.AbstractFramework
+local C = addon.Components
 
 local changelogData = {
+    {
+        version = "Version 3.1",
+        changes = {
+            "Redesigned the UI (again) as AbstractFramework maintenance has diminished",
+        }
+    },
     {
         version = "Version 3.0",
         changes = {
@@ -139,75 +144,42 @@ function addon:GetChangelog()
     return changelogData
 end
 
----Creates the changelog content with titled panes for each version
+---Creates the changelog content with a card for each version
 ---@param parent table The parent frame to add content to
 local function CreateChangelogContent(parent)
-    local scrollFrame = AF.CreateScrollFrame(parent, nil, parent:GetWidth() - 10, parent:GetHeight() - 10, "background2")
-    AF.SetPoint(scrollFrame, "TOPLEFT", parent, "TOPLEFT", 5, -5)
+    local scroller = C:CreateTabScroller(parent)
 
-    local scrollContent = scrollFrame.scrollContent or scrollFrame
-    local yOffset = -5
+    -- pre-size cards so AddLabel measures wrapped text against the final width
+    local cardWidth = math.max(220, parent:GetWidth() - 24)
 
     for _, versionData in ipairs(changelogData) do
-        local versionPane = AF.CreateTitledPane(scrollContent, versionData.version, scrollContent:GetWidth() - 15, 30)
-        AF.SetPoint(versionPane, "TOPLEFT", 5, yOffset)
+        local card = C:CreateCard(scroller, versionData.version)
+        card:SetWidth(cardWidth)
 
-        local changesStr = table.concat(versionData.changes, "\n• ")
-        changesStr = "• " .. changesStr
+        local changesStr = "• " .. table.concat(versionData.changes, "\n• ")
+        card:AddLabel(changesStr)
 
-        local changesText = AF.CreateFontString(versionPane, changesStr, "white", "AF_FONT_NORMAL")
-        AF.SetPoint(changesText, "TOPLEFT", versionPane, "TOPLEFT", 0, -25)
-        changesText:SetWidth(versionPane:GetWidth())
-        changesText:SetJustifyH("LEFT")
-        changesText:SetWordWrap(true)
-        yOffset = yOffset - changesText:GetStringHeight() - 35
+        scroller:AddCard(card)
     end
 
-    scrollContent:SetHeight(math.abs(yOffset))
+    scroller:Commit()
 end
 
 ---Opens the changelog window
 ---@param onCloseCallback function|nil Optional callback to execute when the window closes
 function addon:openChangelog(onCloseCallback)
-    local frame = self.frame
-    if self.frame and self.frameType == "Changelog" then
-        if self.frame.content then
-            self.frame.content:Hide()
-            self.frame.content = nil
-        end
-    else
-        if self.frame then
-            self.frame:Hide()
-            self.frame = nil
-        end
-        self.frameType = "Changelog"
-        frame = AF.CreateHeaderedFrame(AF.UIParent, "InstanceLoadouts_Changelog",
-            AF.GetIconString("IL", 14, 14, "InstanceLoadouts") .. " " .. addonName, 651, 380)
-        AF.SetPoint(frame, "CENTER", UIParent, "CENTER", 0, 0)
-        frame:SetTitleColor("white")
-        frame:SetFrameLevel(100)
-        frame:SetTitleJustify("LEFT")
-
-        local pageName = AF.CreateFontString(frame.header, nil, "white", "AF_FONT_TITLE")
-        AF.SetPoint(pageName, "CENTER", frame.header, "CENTER", 0, 0)
-        pageName:SetJustifyH("CENTER")
-        pageName:SetText(self.frameType)
-
-        frame:SetScript("OnHide", function()
-            self.frame = nil
+    local _, content = self.UI.AcquireWindow("Changelog", {
+        width = 560,
+        height = 420,
+        icon = addon.icon,
+        onHide = function()
             if onCloseCallback then
                 onCloseCallback()
             end
-        end)
+        end,
+    })
 
-        _G["InstanceLoadouts_Changelog"] = frame
-        table.insert(UISpecialFrames, "InstanceLoadouts_Changelog")
-        frame:Show()
-    end
-
-    CreateChangelogContent(frame)
-
-    self.frame = frame
+    CreateChangelogContent(content)
 end
 
 ---Shows the changelog window (for compatibility)

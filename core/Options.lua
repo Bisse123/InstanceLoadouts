@@ -1,155 +1,121 @@
 local addonName, addon = ...
 
----@type AbstractFramework
-local AF = _G.AbstractFramework
+local C = addon.Components
 
----Creates the changelog options section
----@param parent table The parent frame
----@param yOffset number The y offset for positioning
----@return number newYOffset The new y offset after adding elements
-local function CreateChangelogOptions(parent, yOffset)
-    local changelogPane = AF.CreateTitledPane(parent, "Changelog", parent:GetWidth() - 10, 80)
-    AF.SetPoint(changelogPane, "TOPLEFT", 5, yOffset)
+---Creates the changelog options card
+---@param scroller table The scroll content to add the card to
+local function CreateChangelogOptions(scroller)
+    local card = C:CreateCard(scroller, "Changelog")
 
-    local changelogButton = AF.CreateButton(changelogPane, "Open Changelog", addonName, 150, 25)
-    AF.SetPoint(changelogButton, "TOPLEFT", changelogPane, "TOPLEFT", 0, -25)
-    changelogButton:SetOnClick(function()
-        addon:toggleChangelog()
-    end)
+    local changelogButton = C:CreateButton(card, "Open Changelog", {
+        height = 24,
+        callback = function()
+            addon:toggleChangelog()
+        end,
+    })
+    card:AddWidget(changelogButton, nil, 24)
 
-    local autoShowCheckbox = AF.CreateCheckButton(changelogPane, "Auto show changelog on update", function(checked)
+    local autoShowToggle = C:CreateToggle(card, "Auto show changelog on update", addon.db.global.autoShowChangelog, function(checked)
         addon.db.global.autoShowChangelog = checked
     end)
-    AF.SetPoint(autoShowCheckbox, "TOPLEFT", changelogButton, "TOPRIGHT", 5, -5)
-    autoShowCheckbox:SetChecked(addon.db.global.autoShowChangelog)
+    card:AddWidget(autoShowToggle, nil, 30)
 
-    return yOffset - 60
+    scroller:AddCard(card)
 end
 
----Creates the import/export loadouts options section
----@param parent table The parent frame
----@param yOffset number The y offset for positioning
----@return number newYOffset The new y offset after adding elements
-local function CreateImportExportOptions(parent, yOffset)
-    local importExportPane = AF.CreateTitledPane(parent, "Import/Export Loadouts - disabled for now", parent:GetWidth() - 10, 80)
-    AF.SetPoint(importExportPane, "TOPLEFT", 5, yOffset)
+---Creates the import/export loadouts options card
+---@param scroller table The scroll content to add the card to
+local function CreateImportExportOptions(scroller)
+    local card = C:CreateCard(scroller, "Import/Export Loadouts")
 
-    local importButton = AF.CreateButton(importExportPane, "Import Loadouts", addonName, 150, 25)
-    AF.SetPoint(importButton, "TOPLEFT", importExportPane, "TOPLEFT", 0, -25)
-    importButton:SetOnClick(function()
-        addon:toggleImport()
-    end)
+    card:AddLabel("Disabled for now", addon.Theme.text.muted)
+
+    local row = CreateFrame("Frame", nil, card)
+    row:SetHeight(24)
+
+    local importButton = C:CreateButton(row, "Import Loadouts", {
+        height = 24,
+        callback = function()
+            addon:toggleImport()
+        end,
+    })
+    importButton:SetPoint("TOPLEFT", row, "TOPLEFT", 0, 0)
+    importButton:SetPoint("BOTTOMRIGHT", row, "BOTTOM", -3, 0)
     importButton:SetEnabled(false)
 
-    local exportButton = AF.CreateButton(importExportPane, "Export Loadouts", addonName, 150, 25)
-    AF.SetPoint(exportButton, "TOPLEFT", importButton, "TOPRIGHT", 5, 0)
-    exportButton:SetOnClick(function()
-        addon:toggleExport()
-    end)
+    local exportButton = C:CreateButton(row, "Export Loadouts", {
+        height = 24,
+        callback = function()
+            addon:toggleExport()
+        end,
+    })
+    exportButton:SetPoint("TOPLEFT", row, "TOP", 3, 0)
+    exportButton:SetPoint("BOTTOMRIGHT", row, "BOTTOMRIGHT", 0, 0)
     exportButton:SetEnabled(false)
 
-    return yOffset - 60
+    card:AddWidget(row, nil, 24)
+
+    scroller:AddCard(card)
 end
 
----Creates the manage custom instances options section
----@param parent table The parent frame
----@param yOffset number The y offset for positioning
----@return number newYOffset The new y offset after adding elements
-local function CreateCustomInstancesOptions(parent, yOffset)
-    local customInstancesPane = AF.CreateTitledPane(parent, "Manage Custom Instances", parent:GetWidth() - 10, 80)
-    AF.SetPoint(customInstancesPane, "TOPLEFT", 5, yOffset)
+---Creates the manage custom instances options card
+---@param scroller table The scroll content to add the card to
+local function CreateCustomInstancesOptions(scroller)
+    local card = C:CreateCard(scroller, "Manage Custom Instances")
 
-    local customInstancesButton = AF.CreateButton(customInstancesPane, "Custom Instances", addonName, 150, 25)
-    AF.SetPoint(customInstancesButton, "TOPLEFT", customInstancesPane, "TOPLEFT", 0, -25)
-    customInstancesButton:SetOnClick(function()
-        addon:toggleCustomInstanceUI()
-    end)
+    local customInstancesButton = C:CreateButton(card, "Custom Instances", {
+        height = 24,
+        callback = function()
+            addon:toggleCustomInstanceUI()
+        end,
+    })
+    card:AddWidget(customInstancesButton, nil, 24)
 
-    return yOffset - 60
+    scroller:AddCard(card)
 end
 
----Creates the configure loadouts options section
----@param parent table The parent frame
----@param yOffset number The y offset for positioning
----@return number newYOffset The new y offset after adding elements
-local function CreateConfigureLoadoutsOptions(parent, yOffset)
-    local loadoutsPane = AF.CreateTitledPane(parent, "Configure Loadouts", parent:GetWidth() - 10, 80)
-    AF.SetPoint(loadoutsPane, "TOPLEFT", 5, yOffset)
+---Creates the configure loadouts options card
+---@param scroller table The scroll content to add the card to
+local function CreateConfigureLoadoutsOptions(scroller)
+    local card = C:CreateCard(scroller, "Configure Loadouts")
 
-    local loadoutsButton = AF.CreateButton(loadoutsPane, "Loadouts", addonName, 150, 25)
-    AF.SetPoint(loadoutsButton, "TOPLEFT", loadoutsPane, "TOPLEFT", 0, -25)
-    loadoutsButton:SetOnClick(function()
-        addon:toggleConfig()
-    end)
+    local loadoutsButton = C:CreateButton(card, "Loadouts", {
+        height = 24,
+        callback = function()
+            addon:toggleConfig()
+        end,
+    })
+    card:AddWidget(loadoutsButton, nil, 24)
 
-    return yOffset - 60
+    scroller:AddCard(card)
 end
 
 ---Opens the options window
 ---@param onCloseCallback function|nil Optional callback to execute when the window closes
 function addon:openOptions(onCloseCallback)
-    local frame = self.frame
-    if self.frame and self.frameType == "Options" then
-        if self.frame.content then
-            self.frame.content:Hide()
-            self.frame.content = nil
-        end
-    else
-        if self.frame then
-            self.frame:Hide()
-            self.frame = nil
-        end
-        self.frameType = "Options"
-        frame = AF.CreateHeaderedFrame(AF.UIParent, "InstanceLoadouts_Options",
-            AF.GetIconString("IL", 14, 14, "InstanceLoadouts") .. " " .. addonName, 400, 350)
-        AF.SetPoint(frame, "CENTER", UIParent, "CENTER", 0, 0)
-        frame:SetTitleColor("white")
-        frame:SetFrameLevel(100)
-        frame:SetTitleJustify("LEFT")
-
-        local pageName = AF.CreateFontString(frame.header, nil, "white", "AF_FONT_TITLE")
-        AF.SetPoint(pageName, "CENTER", frame.header, "CENTER", 0, 0)
-        pageName:SetJustifyH("CENTER")
-        pageName:SetText(self.frameType)
-
-        local optionsButton = AF.CreateButton(frame.header, "", addonName, 20, 20)
-        AF.ApplyDefaultBackdropWithColors(optionsButton, "header")
-        AF.SetPoint(optionsButton, "TOPRIGHT", -19, 0)
-
-        optionsButton:SetTexture("OptionsIcon-Brown", {12, 12}, {"CENTER", 0, 0}, true)
-        optionsButton:SetFrameLevel(frame:GetFrameLevel() + 10)
-        optionsButton:SetOnClick(function()
+    local _, content = self.UI.AcquireWindow("Options", {
+        width = 400,
+        height = 380,
+        icon = addon.icon,
+        onGear = function()
             self.transitioning = true
             addon:openConfig()
-        end)
-
-        frame:SetScript("OnHide", function()
-            self.frame = nil
+        end,
+        onHide = function()
             if onCloseCallback and not self.transitioning then
                 onCloseCallback()
             end
-        end)
+        end,
+    })
 
-        _G["InstanceLoadouts_Options"] = frame
-        table.insert(UISpecialFrames, "InstanceLoadouts_Options")
-        frame:Show()
-    end
+    local scroller = C:CreateTabScroller(content)
 
-    local scrollFrame = AF.CreateScrollFrame(frame, nil, frame:GetWidth() - 10, frame:GetHeight() - 10, "background2")
-    AF.SetPoint(scrollFrame, "TOPLEFT", frame, "TOPLEFT", 5, -5)
+    CreateChangelogOptions(scroller)
+    CreateImportExportOptions(scroller)
+    CreateCustomInstancesOptions(scroller)
+    CreateConfigureLoadoutsOptions(scroller)
 
-    local scrollContent = scrollFrame.scrollContent or scrollFrame
-
-    local yOffset = -5
-
-    yOffset = CreateChangelogOptions(scrollContent, yOffset)
-    yOffset = CreateImportExportOptions(scrollContent, yOffset)
-    yOffset = CreateCustomInstancesOptions(scrollContent, yOffset)
-    yOffset = CreateConfigureLoadoutsOptions(scrollContent, yOffset)
-
-    scrollContent:SetHeight(math.abs(yOffset))
-
-    self.frame = frame
+    scroller:Commit()
 end
 
 ---Toggles the options window open/closed
@@ -157,7 +123,6 @@ end
 function addon:toggleOptions(onCloseCallback)
     if addon.frame and addon.frameType == "Options" then
         addon.frame:Hide()
-        addon.frame = nil
     else
         addon:openOptions(onCloseCallback)
     end

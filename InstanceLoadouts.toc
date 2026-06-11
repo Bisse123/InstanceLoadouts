@@ -7,7 +7,6 @@
 ## IconTexture: Interface\AddOns\InstanceLoadouts\Media\Icons\IL.tga
 ## SavedVariables: InstanceLoadoutsDB
 
-## Dependencies: AbstractFramework
 ## OptionalDeps: ACP, BetterAddonList, SimpleAddonManager, TalentLoadoutManager, WowUnit
 
 ## X-Curse-Project-ID: 1235057
@@ -26,6 +25,8 @@
 ## Category-zhTW: 地城與團隊
 
 Libs/embeds.xml
+
+UI/SwirlFramework.xml
 
 core/Constants.lua
 core/Managers.lua
