@@ -294,6 +294,13 @@ SlashCmdList["INSTANCELOADOUTS"] = function(msg)
     elseif command == "debug" or command == "d" then
         -- Force-show the reminder for the current instance even if nothing needs changing
         addon:checkIfIsTrackedInstance(true)
+    elseif command == "testconfirm" or command == "tc" then
+        local C = addon.Components
+        C.ShowConfirm("This is a test confirm dialog.", function()
+            addon:Print("Confirmed!")
+        end, function()
+            addon:Print("Cancelled!")
+        end, 260, addon.frame)
     elseif command == "scan" then
         local targets = {
             ["Collegiate Calamity"] = true,

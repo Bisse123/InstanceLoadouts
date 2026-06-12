@@ -276,7 +276,7 @@ function addon:createAddonsFrame(parent, instanceType, instance)
                 section:SetAction("Change AddOns to " .. name, function()
                     C.ShowConfirm(theme.error:WrapTextInColorCode("Reload UI now?"), function()
                         addon.manager:loadAddons(addonSet)
-                    end)
+                    end, nil, 260, addon.frame)
                 end)
             else
                 section:SetStatus("Current AddOns are", name)
