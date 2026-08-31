@@ -176,6 +176,32 @@ local function CreateListPanel(parent)
     return panel
 end
 
+---Resolves the specialization a loadout effectively uses, following override fallbacks
+---@param dbKey string The loadouts table key
+---@param id number The instance/encounter ID
+---@return number specialization The effective specialization index, or -1 for none
+local function ResolveEffectiveSpecialization(dbKey, id)
+    local dbLoadouts = addon.db.char.loadouts
+    local dbLoadout = dbLoadouts[dbKey][id]
+
+    if strfind(dbKey, "Encounter") and id == -1 then
+        if dbLoadout["Override Global Specialization"] then
+            return dbLoadout.Specialization
+        end
+        local globalDefault = dbLoadouts.RaidGlobalDefault and dbLoadouts.RaidGlobalDefault[-1]
+        return globalDefault and globalDefault.Specialization or -1
+    end
+
+    if id == -1 then
+        return dbLoadout.Specialization
+    end
+
+    if dbLoadout["Override Default Specialization"] then
+        return dbLoadout.Specialization
+    end
+    return dbLoadouts[dbKey][-1].Specialization
+end
+
 ---Populates the options area with configuration options for a loadout
 ---@param host table The host frame to populate
 ---@param instanceTypeValue string The loadouts table key (e.g. "Dungeon", "2769 Encounter")
@@ -190,6 +216,11 @@ function addon:populateOptionsArea(host, instanceTypeValue, instanceValue)
         actualInstanceValue = instanceValue.instanceID
     elseif type(instanceValue) == "table" and instanceValue.id then
         actualInstanceValue = instanceValue.id
+    end
+
+    local effectiveSpecialization = ResolveEffectiveSpecialization(instanceTypeValue, actualInstanceValue)
+    if effectiveSpecialization ~= -1 then
+        self:checkTalentManager(effectiveSpecialization)
     end
 
     local dbLoadouts = self.db.char.loadouts
@@ -406,21 +437,6 @@ function addon:populateOptionsArea(host, instanceTypeValue, instanceValue)
     end
 end
 
----Checks the talent manager for the effective specialization of a loadout
----@param dbKey string The loadouts table key
----@param id number The instance/encounter ID
-local function CheckManagersForLoadout(dbKey, id)
-    local dbLoadouts = addon.db.char.loadouts
-    local specializationSet = dbLoadouts[dbKey][id].Specialization
-    local overrideSpecializationSet = dbLoadouts[dbKey][id]["Override Default Specialization"]
-    if not overrideSpecializationSet then
-        specializationSet = dbLoadouts[dbKey][-1].Specialization
-    end
-    if specializationSet ~= -1 then
-        addon:checkTalentManager(specializationSet)
-    end
-end
-
 ---Populates the middle list panel with raid encounters
 ---@param panel table The list panel
 ---@param optionsHost table The options area frame
@@ -443,7 +459,6 @@ local function PopulateEncounterList(panel, optionsHost, instanceTypeValue, inst
         local instanceEncounter = instanceValue .. " Encounter"
         EnsureLoadout(instanceEncounter, -1)
         EnsureLoadout(instanceEncounter, encounterValue)
-        CheckManagersForLoadout(instanceEncounter, encounterValue)
 
         addon:populateOptionsArea(optionsHost, instanceEncounter, encounterValue)
     end)
@@ -481,7 +496,6 @@ local function PopulateDungeonList(panel, optionsHost, instanceTypeValue, tierVa
 
         EnsureLoadout(instanceTypeValue, -1)
         EnsureLoadout(instanceTypeValue, instanceID)
-        CheckManagersForLoadout(instanceTypeValue, instanceID)
 
         addon:populateOptionsArea(optionsHost, instanceTypeValue, instanceID)
     end)
@@ -547,7 +561,6 @@ local function BuildTypeContent(host, instanceTypeValue)
         else
             EnsureLoadout(instanceTypeValue, -1)
             EnsureLoadout(instanceTypeValue, instanceValue)
-            CheckManagersForLoadout(instanceTypeValue, instanceValue)
 
             addon:populateOptionsArea(optionsHost, instanceTypeValue, instanceValue)
         end
