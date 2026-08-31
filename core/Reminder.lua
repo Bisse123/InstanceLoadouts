@@ -346,7 +346,12 @@ function addon:showLoadoutForInstance(instanceType, instance, forceShow)
                 local id = tonumber(idStr)
                 return self.ConvertIDToName[id]
             end
-            if instanceType == "Open World" then return "Open World" end
+            if instanceType == "Open World" then
+                if instance ~= -1 then
+                    return self.ConvertIDToName[instance]
+                end
+                return "Open World"
+            end
             return self.ConvertIDToName[instance]
         end)(),
         onGear = function()
@@ -480,6 +485,12 @@ function addon:checkIfIsTrackedInstance(forceShow)
     if instanceType == "none" or tContains(isGarrison, instanceID) then
         instance = "Open World"
         encounter = -1
+        if not tContains(isGarrison, instanceID) then
+            local mapID = C_Map.GetBestMapForUnit("player")
+            if mapID and self.ConvertIDToName[mapID] and dbLoadouts[instance][mapID] then
+                encounter = mapID
+            end
+        end
     elseif instanceType == "party" then
         instance = "Dungeon"
         if self.ConvertIDToName[instanceID] and dbLoadouts[instance][instanceID] then

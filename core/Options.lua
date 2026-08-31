@@ -83,22 +83,6 @@ local function CreateImportExportOptions(scroller)
     scroller:AddCard(card)
 end
 
----Creates the manage custom instances options card
----@param scroller table The scroll content to add the card to
-local function CreateCustomInstancesOptions(scroller)
-    local card = C:CreateCard(scroller, "Manage Custom Instances")
-
-    local customInstancesButton = C:CreateButton(card, "Custom Instances", {
-        height = 24,
-        callback = function()
-            addon:toggleCustomInstanceUI()
-        end,
-    })
-    card:AddWidget(customInstancesButton, nil, 24)
-
-    scroller:AddCard(card)
-end
-
 ---Creates the configure loadouts options card
 ---@param scroller table The scroll content to add the card to
 local function CreateConfigureLoadoutsOptions(scroller)
@@ -138,7 +122,6 @@ function addon:openOptions(onCloseCallback)
     CreateChangelogOptions(scroller)
     CreateBossTargetOptions(scroller)
     CreateImportExportOptions(scroller)
-    CreateCustomInstancesOptions(scroller)
     CreateConfigureLoadoutsOptions(scroller)
 
     scroller:Commit()

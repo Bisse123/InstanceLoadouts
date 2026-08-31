@@ -21,7 +21,7 @@ local instanceTypeOrder = {
 addon.ConfigView = {
     ["instanceType"] = instanceTypeOrder[1],
     ["instance"] = -1,
-    ["encounter"] = -1,
+    ["encounter"] = {},
 }
 
 local LIST_PANEL_W = 170
@@ -248,6 +248,19 @@ function addon:populateOptionsArea(host, instanceTypeValue, instanceValue)
         scroller:AddCard(messageCard)
     end
 
+    if instanceTypeValue == "Open World" and actualInstanceValue == -1 then
+        local captureCard = C:CreateCard(scroller, "Add Location")
+        local captureButton = C:CreateButton(captureCard, "Get Current Location", {
+            height = 24,
+            callback = function()
+                addon:addCurrentOpenWorldLocation()
+                addon:openConfig()
+            end,
+        })
+        captureCard:AddWidget(captureButton, nil, 24)
+        scroller:AddCard(captureCard)
+    end
+
     for _, type in ipairs(externalOrder) do
         local info = self.externalInfo[type]
 
@@ -428,6 +441,97 @@ function addon:populateOptionsArea(host, instanceTypeValue, instanceValue)
 
             scroller:AddCard(card)
         end
+
+        if journalInstance and not self.defaultJournalIDs.Raid[journalInstance] then
+            if instanceValue == -1 then
+                local removeCard = C:CreateCard(scroller, "Remove Raid")
+                local removeRaidButton = C:CreateButton(removeCard, "Remove This Raid", {
+                    height = 24,
+                    callback = function()
+                        addon:removeRaidInstance(journalInstance)
+                        local default = addon:generateDefaults()
+                        addon.db:RegisterDefaults(default)
+                        addon:openConfig()
+                    end,
+                })
+                removeRaidButton.label:SetTextColor(theme.error.r, theme.error.g, theme.error.b, 1)
+                removeCard:AddWidget(removeRaidButton, nil, 24)
+                scroller:AddCard(removeCard)
+            elseif journalEncounter then
+                local removeCard = C:CreateCard(scroller, "Remove Boss")
+                local removeBossButton = C:CreateButton(removeCard, "Remove This Boss", {
+                    height = 24,
+                    callback = function()
+                        addon:removeEncounterFromRaid(journalInstance, journalEncounter)
+                        local default = addon:generateDefaults()
+                        addon.db:RegisterDefaults(default)
+                        addon:openConfig()
+                    end,
+                })
+                removeBossButton.label:SetTextColor(theme.error.r, theme.error.g, theme.error.b, 1)
+                removeCard:AddWidget(removeBossButton, nil, 24)
+                scroller:AddCard(removeCard)
+            end
+        end
+    end
+
+    if instanceTypeValue == "Dungeon" then
+        local journalTier, journalInstance
+        for tierID, journalInstanceIDs in pairs(self.db.global.journalIDs.Dungeon) do
+            for journalInstanceID in pairs(journalInstanceIDs) do
+                local _, _, _, _, _, _, _, _, _, instanceID = EJ_GetInstanceInfo(journalInstanceID)
+                if instanceID == actualInstanceValue then
+                    journalTier, journalInstance = tierID, journalInstanceID
+                    break
+                end
+            end
+            if journalInstance then break end
+        end
+
+        if actualInstanceValue == -1 then
+            -- Find the tier currently selected via the saved view state
+            journalTier = addon.ConfigView.instance
+            if not self.defaultJournalIDs.Dungeon[journalTier] and self.db.global.journalIDs.Dungeon[journalTier] then
+                local removeCard = C:CreateCard(scroller, "Remove Tier")
+                local removeTierButton = C:CreateButton(removeCard, "Remove This Tier", {
+                    height = 24,
+                    callback = function()
+                        addon:removeDungeonTier(journalTier)
+                        addon:openConfig()
+                    end,
+                })
+                removeTierButton.label:SetTextColor(theme.error.r, theme.error.g, theme.error.b, 1)
+                removeCard:AddWidget(removeTierButton, nil, 24)
+                scroller:AddCard(removeCard)
+            end
+        elseif journalInstance and journalTier
+            and not (self.defaultJournalIDs.Dungeon[journalTier] and self.defaultJournalIDs.Dungeon[journalTier][journalInstance]) then
+            local removeCard = C:CreateCard(scroller, "Remove Dungeon")
+            local removeDungeonButton = C:CreateButton(removeCard, "Remove This Dungeon", {
+                height = 24,
+                callback = function()
+                    addon:removeDungeonInstanceFromTier(journalTier, journalInstance)
+                    addon:openConfig()
+                end,
+            })
+            removeDungeonButton.label:SetTextColor(theme.error.r, theme.error.g, theme.error.b, 1)
+            removeCard:AddWidget(removeDungeonButton, nil, 24)
+            scroller:AddCard(removeCard)
+        end
+    end
+
+    if instanceTypeValue == "Open World" and actualInstanceValue ~= -1 then
+        local removeCard = C:CreateCard(scroller, "Remove Location")
+        local removeLocationButton = C:CreateButton(removeCard, "Remove This Location", {
+            height = 24,
+            callback = function()
+                addon:removeOpenWorldLocation(actualInstanceValue)
+                addon:openConfig()
+            end,
+        })
+        removeLocationButton.label:SetTextColor(theme.error.r, theme.error.g, theme.error.b, 1)
+        removeCard:AddWidget(removeLocationButton, nil, 24)
+        scroller:AddCard(removeCard)
     end
 
     scroller:Commit()
@@ -453,8 +557,8 @@ local function PopulateEncounterList(panel, optionsHost, instanceTypeValue, inst
         end
     end
 
-    panel:SetItems(encounters, addon.ConfigView.encounter, function(encounterValue)
-        addon.ConfigView.encounter = encounterValue
+    panel:SetItems(encounters, addon.ConfigView.encounter[instanceValue], function(encounterValue)
+        addon.ConfigView.encounter[instanceValue] = encounterValue
 
         local instanceEncounter = instanceValue .. " Encounter"
         EnsureLoadout(instanceEncounter, -1)
@@ -491,8 +595,8 @@ local function PopulateDungeonList(panel, optionsHost, instanceTypeValue, tierVa
         end
     end
 
-    panel:SetItems(dungeonInstances, addon.ConfigView.encounter, function(instanceID)
-        addon.ConfigView.encounter = instanceID
+    panel:SetItems(dungeonInstances, addon.ConfigView.encounter[tierValue], function(instanceID)
+        addon.ConfigView.encounter[tierValue] = instanceID
 
         EnsureLoadout(instanceTypeValue, -1)
         EnsureLoadout(instanceTypeValue, instanceID)

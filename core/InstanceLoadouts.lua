@@ -75,6 +75,7 @@ function addon:generateGlobalDefaults()
         ["migratedRaidDefaultOverrides"] = false,
         ["journalIDs"] = CopyTable(self.defaultJournalIDs),
     }
+    global.journalIDs["Open World"] = global.journalIDs["Open World"] or {}
     return global
 end
 
@@ -305,6 +306,7 @@ function addon:OnInitialize()
             ["journalIDs"] = {
                 ["Dungeon"] = {},
                 ["Raid"] = {},
+                ["Open World"] = {},
             },
         }
     }
@@ -342,7 +344,7 @@ SlashCmdList["INSTANCELOADOUTS"] = function(msg)
     elseif command == "options" or command == "o" then
         addon:toggleOptions()
     elseif command == "custominstance" or command == "ci" then
-        addon:toggleCustomInstanceUI()
+        addon:toggleConfig()
     elseif command == "target" or command == "t" then
         -- Manual target testing for reminder system
         addon:checkIfIsTrackedInstance()

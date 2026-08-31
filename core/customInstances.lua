@@ -2,19 +2,17 @@ local addonName, addon = ...
 
 local C = addon.Components
 
-local customGroupsConfigView = {
-    ["instanceType"] = nil,
-}
-
 local journalInstance
 
 ---Adds a raid instance to the custom instances list
 ---@param journalInstanceID number The journal instance ID of the raid to add
+---@return number instanceID The game instance ID, as used by the config list
 function addon:addRaidInstance(journalInstanceID)
     local raidJournalIDs = self.db.global.journalIDs.Raid
     if not raidJournalIDs[journalInstanceID] then
         raidJournalIDs[journalInstanceID] = {}
     end
+    EJ_SelectInstance(journalInstanceID)
     for encounterIdx = 1, 99 do
         local _, _, journalEncounterID = EJ_GetEncounterInfoByIndex(encounterIdx, journalInstanceID)
         if not journalEncounterID then
@@ -24,21 +22,35 @@ function addon:addRaidInstance(journalInstanceID)
             raidJournalIDs[journalInstanceID][journalEncounterID] = {}
         end
     end
+    local _, _, _, _, _, _, _, _, _, instanceID = EJ_GetInstanceInfo(journalInstanceID)
     self:getCustomEncounterJournalRaids()
+    return instanceID
 end
 
 ---Adds a dungeon instance to the custom instances list
 ---@param journalInstanceID number The journal instance ID of the dungeon to add
-function addon:addDungeonInstance(journalInstanceID)
+---@param tierID number|nil The tier to file under; defaults to the journal's current tier
+---@param wantInstanceID boolean|nil Look up the game instance ID; this selects the
+---  instance in the journal, so batch adds leave it off to avoid moving the view
+---@return number tierID The tier the dungeon was added to, as used by the config list
+---@return number|nil instanceID The game instance ID, as used by the config's dungeon list
+function addon:addDungeonInstance(journalInstanceID, tierID, wantInstanceID)
     local dungeonJournalIDs = self.db.global.journalIDs.Dungeon
-    local currentTier = EJ_GetCurrentTier()
+    local currentTier = tierID or EJ_GetCurrentTier()
     if not dungeonJournalIDs[currentTier] then
         dungeonJournalIDs[currentTier] = {}
     end
     if not dungeonJournalIDs[currentTier][journalInstanceID] then
         dungeonJournalIDs[currentTier][journalInstanceID] = true
     end
+    local instanceID
+    if wantInstanceID then
+        EJ_SelectInstance(journalInstanceID)
+        local _
+        _, _, _, _, _, _, _, _, _, instanceID = EJ_GetInstanceInfo(journalInstanceID)
+    end
     self:getCustomEncounterJournalDungeons()
+    return currentTier, instanceID
 end
 
 ---Removes a raid instance from the custom instances list
@@ -46,14 +58,16 @@ end
 function addon:removeRaidInstance(journalInstanceID)
     local raidJournalIDs = self.db.global.journalIDs.Raid
     if raidJournalIDs[journalInstanceID] then
-        for encounterIdx = 1, 99 do
-            local _, _, journalEncounterID = EJ_GetEncounterInfoByIndex(encounterIdx, journalInstanceID)
-            if not journalEncounterID then
+        EJ_SelectInstance(journalInstanceID)
+        local _, _, _, _, _, _, _, _, _, instanceID = EJ_GetInstanceInfo(journalInstanceID)
+        raidJournalIDs[journalInstanceID] = nil
+        local raid = self.instanceGroups.Raid
+        for idx, instanceInfo in ipairs(raid) do
+            if instanceInfo.instanceID == instanceID then
+                table.remove(raid, idx)
                 break
             end
-            raidJournalIDs[journalInstanceID][journalEncounterID] = nil
         end
-        self:getCustomEncounterJournalRaids()
     end
 end
 
@@ -68,13 +82,29 @@ function addon:removeDungeonInstance(journalInstanceID)
     end
 end
 
----Refreshes open windows after a custom instance change
+---Adds the player's current zone as a custom Open World location
+function addon:addCurrentOpenWorldLocation()
+    local mapID = C_Map.GetBestMapForUnit("player")
+    if not mapID then return end
+    local mapInfo = C_Map.GetMapInfo(mapID)
+    if not mapInfo then return end
+    local openWorldIDs = self.db.global.journalIDs["Open World"]
+    openWorldIDs[mapID] = mapInfo.name
+    self:getCustomOpenWorldLocations()
+end
+
+---Removes a custom Open World location
+---@param mapID number The map ID of the location to remove
+function addon:removeOpenWorldLocation(mapID)
+    local openWorldIDs = self.db.global.journalIDs["Open World"]
+    openWorldIDs[mapID] = nil
+    self:getCustomOpenWorldLocations()
+end
+
+---Refreshes the Config window after a custom instance change, if it's open
 local function RefreshAfterJournalChange()
     local default = addon:generateDefaults()
     addon.db:RegisterDefaults(default)
-    if addon.frame and addon.frameType == "Custom" then
-        addon:openCustomInstances()
-    end
     if addon.frame and addon.frameType == "Config" then
         addon:openConfig()
     end
@@ -91,31 +121,70 @@ function addon:CreateAddInstanceButton()
                 return
             end
             local isRaidTab = EncounterJournal_IsRaidTabSelected(EncounterJournal)
+            -- The config list is selected by game instance ID for raids and by
+            -- tier ID for dungeons; when adding a whole expansion, select the
+            -- first instance that got added
+            local addedID, addedDungeonID
             if journalInstance then
                 if isRaidTab then
-                    addon:addRaidInstance(journalInstance)
+                    addedID = addon:addRaidInstance(journalInstance)
                 else
-                    addon:addDungeonInstance(journalInstance)
+                    addedID, addedDungeonID = addon:addDungeonInstance(journalInstance, nil, true)
                 end
             else
+                -- EJ_GetInstanceByIndex enumerates the selected tier, and adding
+                -- selects instances (which can move the tier), so snapshot the
+                -- list first and restore the tier around each add
+                local tier = EJ_GetCurrentTier()
+                local contentTab = EncounterJournal.selectedTab
+                local journalInstanceIDs = {}
                 for instanceIdx = 1, 99 do
                     local journalInstanceID = EJ_GetInstanceByIndex(instanceIdx, isRaidTab)
                     if not journalInstanceID then
                         break
                     end
-                    if not isRaidTab then
-                        addon:addDungeonInstance(journalInstanceID)
-                    elseif instanceIdx > 1 then
-                        EncounterJournal_DisplayInstance(journalInstanceID)
-                        addon:addRaidInstance(journalInstanceID)
-                        EJ_ContentTab_Select(EncounterJournal.raidsTab:GetID())
+                    -- index 1 of the raid list is not an addable instance
+                    if not isRaidTab or instanceIdx > 1 then
+                        tinsert(journalInstanceIDs, journalInstanceID)
                     end
                 end
+                for _, journalInstanceID in ipairs(journalInstanceIDs) do
+                    local id
+                    if isRaidTab then
+                        EncounterJournal_DisplayInstance(journalInstanceID)
+                        id = addon:addRaidInstance(journalInstanceID)
+                    else
+                        id = addon:addDungeonInstance(journalInstanceID, tier)
+                    end
+                    addedID = addedID or id
+                end
+                -- Rebuilding the instance lists selects instances in the journal;
+                -- put it back on this expansion's instance list
+                EJ_SelectTier(tier)
+                EJ_ContentTab_Select(contentTab)
+            end
+            addon.ConfigView.instanceType = isRaidTab and "Raid" or "Dungeon"
+            if addedID then
+                addon.ConfigView.instance = addedID
+            end
+            -- Adding one dungeon selects it; adding a whole expansion leaves the
+            -- tier's Default entry selected
+            if not isRaidTab and addedID then
+                addon.ConfigView.encounter[addedID] = addedDungeonID or -1
             end
             RefreshAfterJournalChange()
+            addon:openConfig()
         end,
     })
-    addButton:SetPoint("TOPRIGHT", EncounterJournal, "BOTTOMRIGHT", 0, 0)
+    addButton:SetPoint("TOPRIGHT", EncounterJournal, "BOTTOMRIGHT", 0, -1)
+
+    -- The button floats over the world rather than sitting on a window, so give
+    -- it an opaque backing to match the theme's translucent bg.med against
+    local backing = addButton:CreateTexture(nil, "BACKGROUND", nil, -1)
+    backing:SetAllPoints()
+    local bg = addon.Theme.bg.dark
+    backing:SetColorTexture(bg.r, bg.g, bg.b, 1)
+
     return addButton
 end
 
@@ -162,42 +231,44 @@ end
 ---Creates both add and remove instance buttons in the Encounter Journal
 function addon:CreateInstanceButtons()
     local addButton = self:CreateAddInstanceButton()
-    local currentTierName = EJ_GetTierInfo(EJ_GetCurrentTier())
-    local title = ""
 
-    local function UpdateAddButton(text)
-        addButton:SetLabel(text)
-        addButton:SetWidth(addButton.label:GetStringWidth() + 25)
-    end
+    ---Recomputes the add button's label and visibility from the journal's current state
+    local function RefreshAddButton()
+        if EJ_GetCurrentTier() == EJ_GetNumTiers() then
+            addButton:Hide()
+            return
+        end
 
-    EventRegistry:RegisterCallback("EncounterJournal.TabSet", function(info, tbl, tab)
-        if EJ_GetCurrentTier() ~= EJ_GetNumTiers() and (tab == 3 or tab == 4) then
+        local text
+        if EncounterJournal.encounter:IsShown() then
+            text = EncounterJournal.encounter.instance.title:GetText()
+        elseif EncounterJournal.instanceSelect:IsShown() then
             journalInstance = nil
-            title = EncounterJournal.instanceSelect.Title:GetText()
-            UpdateAddButton("Instance Loadouts Add:\n" .. currentTierName .. " " .. title)
-            addButton:Show()
+            text = EJ_GetTierInfo(EJ_GetCurrentTier()) .. " " .. EncounterJournal.instanceSelect.Title:GetText()
         else
             addButton:Hide()
+            return
         end
-    end)
+
+        addButton:SetLabel("Instance Loadouts Add:\n" .. text)
+        addButton:SetWidth(addButton.label:GetStringWidth() + 25)
+        addButton:Show()
+    end
+
+    EventRegistry:RegisterCallback("EncounterJournal.TabSet", RefreshAddButton)
 
     self:RegisterEvent("CVAR_UPDATE", function(event, cvar)
         if cvar == "EJSelectedTier" then
-            if EJ_GetCurrentTier() ~= EJ_GetNumTiers() then
-                currentTierName = EJ_GetTierInfo(EJ_GetCurrentTier())
-                UpdateAddButton("Instance Loadouts Add:\n" .. currentTierName .. " " .. title)
-                addButton:Show()
-            else
-                addButton:Hide()
-            end
+            RefreshAddButton()
         end
     end)
 
     self:SecureHook("EncounterJournal_DisplayInstance", function(journalInstanceID)
         journalInstance = journalInstanceID
-        title = EncounterJournal.encounter.instance.title:GetText()
-        UpdateAddButton("Instance Loadouts Add:\n" .. title)
+        RefreshAddButton()
     end)
+    EncounterJournal.instanceSelect:HookScript("OnShow", RefreshAddButton)
+    EncounterJournal:HookScript("OnShow", RefreshAddButton)
 end
 
 ---Gets and populates custom dungeon instances from the journal
@@ -218,11 +289,13 @@ function addon:getCustomEncounterJournalDungeons()
             end
         end
         for dungeonJournalID, _ in pairs(journalInstanceIDs) do
+            -- EJ_GetInstanceInfo only returns data for the selected instance, and
+            -- a single miss must not abandon the rest of the tier
+            EJ_SelectInstance(dungeonJournalID)
             local instanceName, _, _, _, _, _, _, _, _, instanceID = EJ_GetInstanceInfo(dungeonJournalID)
-            if not instanceID then
-                break
+            if instanceID then
+                tinsert(instanceIDs, {instanceID = instanceID, instanceName = instanceName})
             end
-            tinsert(instanceIDs, {instanceID = instanceID, instanceName = instanceName})
         end
         if tierIdx then
             dungeon[tierIdx] = {tierID = tierID, tierName = tierName, instanceIDs = instanceIDs}
@@ -237,10 +310,10 @@ function addon:getCustomEncounterJournalRaids()
     local raidJournalIDs = self.db.global.journalIDs.Raid
     local raid = self.instanceGroups.Raid
     for journalInstanceID, journalEncounterIDs in pairs(raidJournalIDs) do
+        -- EJ_GetInstanceInfo only returns data for the selected instance, and a
+        -- single miss must not abandon the rest of the rebuild
+        EJ_SelectInstance(journalInstanceID)
         local instanceName, _, _, _, _, _, _, _, _, instanceID = EJ_GetInstanceInfo(journalInstanceID)
-        if not instanceID then
-            break
-        end
         local alreadyExist = false
         for _, instanceInfo in ipairs(raid) do
             if instanceInfo.instanceID == instanceID then
@@ -248,7 +321,7 @@ function addon:getCustomEncounterJournalRaids()
                 break
             end
         end
-        if not alreadyExist then
+        if instanceID and not alreadyExist then
             local encounterIDs = {{encounterID = -1, encounterName = "Default"}}
             for journalEncounterID, npcIDs in pairs(journalEncounterIDs) do
                 local encounterName, _, _, _, _, _, encounterID = EJ_GetEncounterInfo(journalEncounterID)
@@ -262,235 +335,92 @@ function addon:getCustomEncounterJournalRaids()
     end
 end
 
+---Gets and populates custom Open World locations
+function addon:getCustomOpenWorldLocations()
+    local openWorldIDs = self.db.global.journalIDs["Open World"]
+    local openWorld = self.instanceGroups["Open World"]
+    for idx = #openWorld, 1, -1 do
+        if openWorld[idx].instanceID ~= -1 then
+            table.remove(openWorld, idx)
+        end
+    end
+    for mapID, mapName in pairs(openWorldIDs) do
+        tinsert(openWorld, {instanceID = mapID, instanceName = mapName})
+    end
+end
+
 ---Gets and populates all custom instances from the journal
 function addon:getCustomEncounterJournals()
     self:getCustomEncounterJournalDungeons()
     self:getCustomEncounterJournalRaids()
+    self:getCustomOpenWorldLocations()
 end
 
----Adds a label + remove button row to a card
----@param card table The card to add the row to
----@param text string The row label
----@param onRemove function Called when the remove button is clicked
-local function AddRemoveRow(card, text, onRemove)
-    local theme = addon.Theme
-
-    local row = CreateFrame("Frame", nil, card)
-    row:SetHeight(22)
-
-    local removeButton = C:CreateButton(row, "Remove", {
-        width = 80,
-        height = 20,
-        callback = onRemove,
-    })
-    removeButton:SetPoint("RIGHT", row, "RIGHT", 0, 0)
-    removeButton.label:SetTextColor(theme.error.r, theme.error.g, theme.error.b, 1)
-
-    local label = row:CreateFontString(nil, "OVERLAY")
-    C.ApplyFont(label, "normal")
-    label:SetPoint("LEFT", row, "LEFT", 0, 0)
-    label:SetPoint("RIGHT", removeButton, "LEFT", -6, 0)
-    label:SetJustifyH("LEFT")
-    label:SetWordWrap(false)
-    label:SetText(text)
-    local color = theme.text.primary
-    label:SetTextColor(color.r, color.g, color.b, 1)
-
-    card:AddWidget(row, nil, 22)
-end
-
----Adds remove rows for the custom encounters of a raid instance to a card
----@param card table The card to add encounter rows to
----@param instanceTypeValue string The type of instance
----@param journalInstanceID number The journal instance ID
-function addon:createCustomGroupsEncounterConfig(card, instanceTypeValue, journalInstanceID)
-    local journalEncounterIDs = self.db.global.journalIDs[instanceTypeValue][journalInstanceID]
-
-    for journalEncounterID, _ in pairs(journalEncounterIDs) do
-        if not self.defaultJournalIDs[instanceTypeValue][journalEncounterID] then
-            local _, _, _, _, _, _, _, _, _, instanceID = EJ_GetInstanceInfo(journalInstanceID)
-            local encounterName, _, _, _, _, _, encounterID = EJ_GetEncounterInfo(journalEncounterID)
-
-            AddRemoveRow(card, encounterName, function()
-                journalEncounterIDs[journalEncounterID] = nil
-                local customJournalInstances = addon.instanceGroups[instanceTypeValue]
-                for _, instanceInfo in ipairs(customJournalInstances) do
-                    if instanceInfo.instanceID == instanceID then
-                        for encounterIdx, encounterInfo in ipairs(instanceInfo.encounterIDs) do
-                            if encounterInfo.encounterID == encounterID then
-                                table.remove(instanceInfo.encounterIDs, encounterIdx)
-                                break
-                            end
-                        end
-                        break
-                    end
-                end
-                local default = addon:generateDefaults()
-                addon.db:RegisterDefaults(default)
-                addon:openCustomInstances()
-            end)
-        end
-    end
-end
-
----Builds the dungeon tab cards (one card per custom tier)
----@param scroller table The scroll content to add cards to
-local function BuildDungeonTab(scroller)
-    local instanceTypeValue = "Dungeon"
-    local tierIDs = addon.db.global.journalIDs[instanceTypeValue]
-    local theme = addon.Theme
-
-    for tierID, tierInfo in pairs(tierIDs) do
-        if not addon.defaultJournalIDs[instanceTypeValue][tierID] then
-            local tierName = EJ_GetTierInfo(tierID)
-
-            local card = C:CreateCard(scroller, tierName)
-
-            local removeTierButton = C:CreateButton(card, "Remove " .. tierName, {
-                height = 22,
-                callback = function()
-                    tierIDs[tierID] = nil
-                    local customJournalTiers = addon.instanceGroups[instanceTypeValue]
-                    for tierIdx, customJournalInstances in ipairs(customJournalTiers) do
-                        if customJournalInstances.tierID == tierID then
-                            table.remove(customJournalTiers, tierIdx)
-                            break
-                        end
-                    end
-                    local default = addon:generateDefaults()
-                    addon.db:RegisterDefaults(default)
-                    addon:openCustomInstances()
-                end,
-            })
-            removeTierButton.label:SetTextColor(theme.error.r, theme.error.g, theme.error.b, 1)
-            card:AddWidget(removeTierButton, nil, 22)
-
-            if type(tierInfo) == "table" then
-                for journalInstanceID, journalInstanceInfo in pairs(tierInfo) do
-                    if not addon.defaultJournalIDs[instanceTypeValue][journalInstanceID] then
-                        local instanceName, _, _, _, _, _, _, _, _, instanceID = EJ_GetInstanceInfo(journalInstanceID)
-
-                        AddRemoveRow(card, instanceName, function()
-                            tierInfo[journalInstanceID] = nil
-                            local customJournalInstances = addon.instanceGroups[instanceTypeValue]
-                            for instanceIdx, instanceInfo in ipairs(customJournalInstances) do
-                                if instanceInfo.tierID == tierID then
-                                    for idx, instInfo in ipairs(instanceInfo.instanceIDs) do
-                                        if instInfo.instanceID == instanceID then
-                                            table.remove(instanceInfo.instanceIDs, idx)
-                                            break
-                                        end
-                                    end
-                                elseif instanceInfo.instanceID == instanceID then
-                                    table.remove(customJournalInstances, instanceIdx)
-                                    break
-                                end
-                            end
-                            local default = addon:generateDefaults()
-                            addon.db:RegisterDefaults(default)
-                            addon:openCustomInstances()
-                        end)
-
-                        if type(journalInstanceInfo) == "table" then
-                            addon:createCustomGroupsEncounterConfig(card, instanceTypeValue, journalInstanceID)
-                        end
-                    end
+---Removes a custom dungeon instance from a specific tier
+---@param tierID number The tier ID
+---@param journalInstanceID number The journal instance ID of the dungeon to remove
+function addon:removeDungeonInstanceFromTier(tierID, journalInstanceID)
+    local tierInfo = self.db.global.journalIDs.Dungeon[tierID]
+    if not tierInfo then return end
+    EJ_SelectInstance(journalInstanceID)
+    local _, _, _, _, _, _, _, _, _, instanceID = EJ_GetInstanceInfo(journalInstanceID)
+    tierInfo[journalInstanceID] = nil
+    local customJournalInstances = self.instanceGroups.Dungeon
+    for instanceIdx, instanceInfo in ipairs(customJournalInstances) do
+        if instanceInfo.tierID == tierID then
+            for idx, instInfo in ipairs(instanceInfo.instanceIDs) do
+                if instInfo.instanceID == instanceID then
+                    table.remove(instanceInfo.instanceIDs, idx)
+                    break
                 end
             end
-
-            scroller:AddCard(card)
+            break
+        elseif instanceInfo.instanceID == instanceID then
+            table.remove(customJournalInstances, instanceIdx)
+            break
         end
     end
+    local default = self:generateDefaults()
+    self.db:RegisterDefaults(default)
 end
 
----Builds the raid tab cards (one card per custom raid instance)
----@param scroller table The scroll content to add cards to
-local function BuildRaidTab(scroller)
-    local instanceTypeValue = "Raid"
-    local theme = addon.Theme
+---Removes an entire custom dungeon tier
+---@param tierID number The tier ID to remove
+function addon:removeDungeonTier(tierID)
+    self.db.global.journalIDs.Dungeon[tierID] = nil
+    local customJournalTiers = self.instanceGroups.Dungeon
+    for tierIdx, customJournalInstances in ipairs(customJournalTiers) do
+        if customJournalInstances.tierID == tierID then
+            table.remove(customJournalTiers, tierIdx)
+            break
+        end
+    end
+    local default = self:generateDefaults()
+    self.db:RegisterDefaults(default)
+end
 
-    for journalInstanceID, journalInstanceInfo in pairs(addon.db.global.journalIDs[instanceTypeValue]) do
-        if not addon.defaultJournalIDs[instanceTypeValue][journalInstanceID] then
-            local instanceName = EJ_GetInstanceInfo(journalInstanceID)
-
-            local card = C:CreateCard(scroller, instanceName)
-
-            local removeButton = C:CreateButton(card, "Remove " .. instanceName, {
-                height = 22,
-                callback = function()
-                    addon.db.global.journalIDs[instanceTypeValue][journalInstanceID] = nil
-                    local default = addon:generateDefaults()
-                    addon.db:RegisterDefaults(default)
-                    addon:openCustomInstances()
-                end,
-            })
-            removeButton.label:SetTextColor(theme.error.r, theme.error.g, theme.error.b, 1)
-            card:AddWidget(removeButton, nil, 22)
-
-            if type(journalInstanceInfo) == "table" then
-                addon:createCustomGroupsEncounterConfig(card, instanceTypeValue, journalInstanceID)
+---Removes a custom encounter from a raid, keeping the raid itself if other encounters remain
+---@param journalInstanceID number The journal instance ID of the raid
+---@param journalEncounterID number The journal encounter ID to remove
+function addon:removeEncounterFromRaid(journalInstanceID, journalEncounterID)
+    local journalEncounterIDs = self.db.global.journalIDs.Raid[journalInstanceID]
+    if not journalEncounterIDs then return end
+    EJ_SelectInstance(journalInstanceID)
+    local _, _, _, _, _, _, _, _, _, instanceID = EJ_GetInstanceInfo(journalInstanceID)
+    local _, _, _, _, _, _, encounterID = EJ_GetEncounterInfo(journalEncounterID)
+    journalEncounterIDs[journalEncounterID] = nil
+    local customJournalInstances = self.instanceGroups.Raid
+    for _, instanceInfo in ipairs(customJournalInstances) do
+        if instanceInfo.instanceID == instanceID then
+            for encounterIdx, encounterInfo in ipairs(instanceInfo.encounterIDs) do
+                if encounterInfo.encounterID == encounterID then
+                    table.remove(instanceInfo.encounterIDs, encounterIdx)
+                    break
+                end
             end
-
-            scroller:AddCard(card)
+            break
         end
     end
-end
-
----Opens the custom instances configuration window
-function addon:openCustomInstances()
-    local _, content = self.UI.AcquireWindow("Custom", {
-        width = 440,
-        height = 440,
-        icon = addon.icon,
-        pageTitle = "Custom Instances",
-        onGear = function()
-            addon:openConfig()
-        end,
-    })
-
-    local savedInstanceType = customGroupsConfigView.instanceType or "Dungeon"
-
-    local function BuildTab(host, instanceType, builder)
-        customGroupsConfigView.instanceType = instanceType
-        if host.inner then
-            host.inner:Hide()
-            host.inner:SetParent(nil)
-        end
-        local inner = CreateFrame("Frame", nil, host)
-        inner:SetAllPoints(host)
-        host.inner = inner
-
-        local scroller = C:CreateTabScroller(inner)
-        builder(scroller)
-        scroller:Commit()
-    end
-
-    local tabs = {
-        {
-            key = "Dungeon",
-            title = "Dungeon",
-            onSelect = function(tabContent)
-                BuildTab(tabContent, "Dungeon", BuildDungeonTab)
-            end,
-        },
-        {
-            key = "Raid",
-            title = "Raid",
-            onSelect = function(tabContent)
-                BuildTab(tabContent, "Raid", BuildRaidTab)
-            end,
-        },
-    }
-
-    local _, _, controller = C.CreateVerticalTabs(content, tabs)
-    controller.Select(savedInstanceType)
-end
-
----Toggles the custom instances UI open/closed
-function addon:toggleCustomInstanceUI()
-    if addon.frame and addon.frameType == "Custom" then
-        addon.frame:Hide()
-    else
-        addon:openCustomInstances()
-    end
+    local default = self:generateDefaults()
+    self.db:RegisterDefaults(default)
 end

@@ -4,6 +4,13 @@ local C = addon.Components
 
 local changelogData = {
     {
+        version = "Version 3.7",
+        changes = {
+            "Custom Instances now re-enabled, working natively within the main UI for modifications - see dungeon journal for the 'Instance Loadouts Add' feature",
+            "Open World configuration added - select 'Get Current Location' under Open World to add and configure a specified location's loadout."
+        }
+    },
+    {
         version = "Version 3.6",
         changes = {
             "Fixed an issue with talent builds not changing with specialization changes",
