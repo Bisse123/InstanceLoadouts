@@ -4,6 +4,12 @@ local C = addon.Components
 
 local changelogData = {
     {
+        version = "Version 3.6",
+        changes = {
+            "Fixed an issue with talent builds not changing with specialization changes",
+        }
+    },
+    {
         version = "Version 3.4",
         changes = {
             "Added an \"All Raids\" global default loadout selection, still able to be overridden by a raid-specific default or boss-specific loadout.",
