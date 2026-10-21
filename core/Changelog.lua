@@ -4,6 +4,14 @@ local C = addon.Components
 
 local changelogData = {
     {
+        version = "Version 3.8",
+        changes = {
+            "Fixed the talent reminder asking to change talents after a reload when the loadout was already applied",
+            "Fixed dropdown lists being slightly scrollable and cutting off the last option",
+            "The reload dialog now appears in the center of the screen",
+        }
+    },
+    {
         version = "Version 3.7",
         changes = {
             "Custom Instances now re-enabled, working natively within the main UI for modifications - see dungeon journal for the 'Instance Loadouts Add' feature",
