@@ -32,6 +32,35 @@ local function WithGlobalRaidDefault(dbLoadouts, instanceType, bossOverrides, va
     return globalDefault[field]
 end
 
+---Checks whether the currently active talents match a saved talent loadout
+---@param savedConfigID number The saved loadout config ID
+---@return boolean True if every node's purchased ranks and chosen entry match
+local function IsActiveConfigMatching(savedConfigID)
+    local activeConfigID = C_ClassTalents.GetActiveConfigID()
+    local configInfo = activeConfigID and C_Traits.GetConfigInfo(activeConfigID)
+    if not configInfo or not configInfo.treeIDs or not configInfo.treeIDs[1] then
+        return false
+    end
+    for _, nodeID in ipairs(C_Traits.GetTreeNodes(configInfo.treeIDs[1])) do
+        local activeNode = C_Traits.GetNodeInfo(activeConfigID, nodeID)
+        local savedNode = C_Traits.GetNodeInfo(savedConfigID, nodeID)
+        if not activeNode or not savedNode then
+            return false
+        end
+        if activeNode.ranksPurchased ~= savedNode.ranksPurchased then
+            return false
+        end
+        if activeNode.ranksPurchased > 0 then
+            local activeEntry = activeNode.activeEntry and activeNode.activeEntry.entryID
+            local savedEntry = savedNode.activeEntry and savedNode.activeEntry.entryID
+            if activeEntry ~= savedEntry then
+                return false
+            end
+        end
+    end
+    return true
+end
+
 ---Creates a reminder section card showing either a status line or an action button
 ---@param scroller table The scroll content to add the card to
 ---@param title string The card title
@@ -173,6 +202,11 @@ function addon:createTalentsFrame(parent, instanceType, instance)
                     configID = self.manager:getActiveTalentLoadoutID()
                 else
                     configID = C_ClassTalents.GetLastSelectedSavedConfigID(specID)
+                    -- Last selected ID can be stale after a reload even though the talents were applied
+                    if talentSet ~= configID and IsActiveConfigMatching(talentSet) then
+                        C_ClassTalents.UpdateLastSelectedSavedConfigID(specID, talentSet)
+                        configID = talentSet
+                    end
                 end
                 if talentSet ~= configID then
                     change = true
