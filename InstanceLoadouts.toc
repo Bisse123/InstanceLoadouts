@@ -7,7 +7,7 @@
 ## IconTexture: Interface\AddOns\InstanceLoadouts\Media\Icons\IL.tga
 ## SavedVariables: InstanceLoadoutsDB
 
-## OptionalDeps: ACP, BetterAddonList, SimpleAddonManager, TalentLoadoutManager, WowUnit
+## OptionalDeps: ACP, BetterAddonList, SimpleAddonManager, TalentLoadoutManager
 
 ## X-Curse-Project-ID: 1235057
 ## X-Wago-ID: 4N2m0QGL
@@ -37,6 +37,3 @@ core/Options.lua
 core/Changelog.lua
 core/Reminder.lua
 core/ImportExport.lua
-test/testData.lua
-test/testReminder.lua
-test/testMain.lua
