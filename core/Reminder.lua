@@ -37,7 +37,10 @@ end
 ---@return boolean True if every node's purchased ranks and chosen entry match
 local function IsActiveConfigMatching(savedConfigID)
     local activeConfigID = C_ClassTalents.GetActiveConfigID()
-    local configInfo = activeConfigID and C_Traits.GetConfigInfo(activeConfigID)
+    if not activeConfigID then
+        return false
+    end
+    local configInfo = C_Traits.GetConfigInfo(activeConfigID)
     if not configInfo or not configInfo.treeIDs or not configInfo.treeIDs[1] then
         return false
     end
@@ -195,7 +198,7 @@ function addon:createTalentsFrame(parent, instanceType, instance)
             section:SetStatus("Talents not set", nil, theme.text.muted)
         else
             if specializationSet == GetSpecialization() then
-                local specID = GetSpecializationInfo(specializationSet)
+                local specID = GetSpecializationInfo(specializationSet) or 0
                 local configID
                 local talentManager = self.manager:getTalentManager()
                 if talentManager then
@@ -394,7 +397,7 @@ function addon:showLoadoutForInstance(instanceType, instance, forceShow)
             local configInstance = instance
             if strfind(configInstanceType, "Encounter") then
                 local instanceStr = strsplit(" ", configInstanceType)
-                configInstance = tonumber(instanceStr)
+                configInstance = tonumber(instanceStr) or instance
                 configInstanceType = "Raid"
             elseif configInstanceType == "Dungeon" then
                 for _, tierInfo in ipairs(addon.instanceGroups.Dungeon) do
